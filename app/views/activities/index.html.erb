@@ -2,11 +2,21 @@
   <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
     <div class="px-4 sm:px-0">
       <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-4xl font-extrabold text-rich-cerulean-400 sm:text-5xl">
-          My Activities
-        </h1>
-        <p class="mt-3 text-lg text-white">View and manage your training activities</p>
+      <div class="mb-8 flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-extrabold text-rich-cerulean-400 sm:text-5xl">
+            My Activities
+          </h1>
+          <p class="mt-3 text-lg text-white/80">View and manage your training activities</p>
+        </div>
+        <div>
+          <%= link_to new_activity_path, class: "inline-flex items-center px-6 py-3 bg-cobalt-blue-500 text-white rounded-lg hover:bg-cobalt-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cobalt-blue-500 transition-colors duration-200 font-medium shadow-lg" do %>
+            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            New Activity
+          <% end %>
+        </div>
       </div>
 
       <% if @activities.any? %>

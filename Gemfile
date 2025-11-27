@@ -25,6 +25,10 @@ gem "jbuilder"
 # Authentication with Devise
 gem "devise"
 
+# File parsing for activities
+gem "rubyfit" # For parsing Garmin FIT files
+gem "zlib" # For handling gzipped files (part of Ruby stdlib, but explicit for clarity)
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
