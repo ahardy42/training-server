@@ -10,9 +10,48 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_05_214725) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_05_214728) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "activities", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "activity_type"
+    t.date "date"
+    t.string "title"
+    t.text "description"
+    t.decimal "distance"
+    t.integer "duration"
+    t.decimal "elevation"
+    t.decimal "average_power"
+    t.decimal "average_hr"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "trackpoints", force: :cascade do |t|
+    t.bigint "track_id", null: false
+    t.datetime "timestamp"
+    t.decimal "latitude", precision: 10, scale: 8
+    t.decimal "longitude", precision: 11, scale: 8
+    t.decimal "heartrate"
+    t.decimal "power"
+    t.decimal "cadence"
+    t.decimal "elevation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["track_id"], name: "index_trackpoints_on_track_id"
+  end
+
+  create_table "tracks", force: :cascade do |t|
+    t.bigint "activity_id", null: false
+    t.datetime "start_date"
+    t.datetime "end_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["activity_id"], name: "index_tracks_on_activity_id"
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
@@ -25,4 +64,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_214725) do
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
+
+  add_foreign_key "activities", "users"
+  add_foreign_key "trackpoints", "tracks"
+  add_foreign_key "tracks", "activities"
 end
