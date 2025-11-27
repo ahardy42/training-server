@@ -1,0 +1,196 @@
+<div class="min-h-screen">
+  <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+    <div class="px-4 sm:px-0">
+      <!-- Header -->
+      <div class="mb-8">
+        <%= link_to activities_path, class: "inline-flex items-center text-sm font-medium text-white/80 hover:text-rich-cerulean-400 mb-6 group transition-colors duration-200" do %>
+          <svg class="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Activities
+        <% end %>
+        
+        <div class="flex items-start justify-between">
+          <div>
+            <h1 class="text-4xl font-extrabold text-rich-cerulean-400 sm:text-5xl">
+              <%= @activity.title.presence || "Untitled Activity" %>
+            </h1>
+            <% if @activity.activity_type.present? %>
+              <span class="mt-3 inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-shadow-grey-700 to-shadow-grey-800 text-cobalt-blue-300 border border-rich-cerulean-200 shadow-sm">
+                <%= @activity.activity_type %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Activity Details Card -->
+          <div class="bg-shadow-grey-800 rounded-xl shadow-lg border border-shadow-grey-100 overflow-hidden">
+            <div class="px-6 py-5 bg-gradient-to-r from-shadow-grey-700 to-shadow-grey-800 border-b border-shadow-grey-200">
+              <h2 class="text-xl font-semibold text-white flex items-center">
+                <svg class="mr-2 h-5 w-5 text-rich-cerulean-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Activity Details
+              </h2>
+            </div>
+            <div class="px-6 py-6">
+              <dl class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <% if @activity.date.present? %>
+                  <div class="bg-shadow-grey-700 rounded-lg p-4">
+                    <dt class="text-xs font-semibold text-white/500 uppercase tracking-wider mb-1">Date</dt>
+                    <dd class="text-lg font-semibold text-white"><%= @activity.date.strftime("%B %d, %Y") %></dd>
+                  </div>
+                <% end %>
+
+                <% if @activity.distance.present? %>
+                  <div class="bg-cobalt-blue-500/20 rounded-lg p-4 border border-shadow-grey-700">
+                    <dt class="text-xs font-semibold text-rich-cerulean-400 uppercase tracking-wider mb-1 flex items-center">
+                      <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                      Distance
+                    </dt>
+                    <dd class="text-2xl font-bold text-white"><%= number_with_precision(@activity.distance, precision: 2) %> <span class="text-sm font-normal text-cobalt-blue-300">km</span></dd>
+                  </div>
+                <% end %>
+
+                <% if @activity.duration.present? %>
+                  <div class="bg-cobalt-blue-50 rounded-lg p-4 border border-indigo-100">
+                    <dt class="text-xs font-semibold text-cobalt-blue-600 uppercase tracking-wider mb-1 flex items-center">
+                      <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Duration
+                    </dt>
+                    <dd class="text-2xl font-bold text-cobalt-blue-900"><%= format_duration(@activity.duration) %></dd>
+                  </div>
+                <% end %>
+
+                <% if @activity.elevation.present? %>
+                  <div class="bg-cobalt-blue-500/20 rounded-lg p-4 border border-green-100">
+                    <dt class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1 flex items-center">
+                      <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                      </svg>
+                      Elevation
+                    </dt>
+                    <dd class="text-2xl font-bold text-green-900"><%= number_with_precision(@activity.elevation, precision: 0) %> <span class="text-sm font-normal text-white">m</span></dd>
+                  </div>
+                <% end %>
+
+                <% if @activity.average_power.present? %>
+                  <div class="bg-cobalt-blue-500/20 rounded-lg p-4 border border-yellow-100">
+                    <dt class="text-xs font-semibold text-yellow-600 uppercase tracking-wider mb-1 flex items-center">
+                      <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Average Power
+                    </dt>
+                    <dd class="text-2xl font-bold text-yellow-900"><%= number_with_precision(@activity.average_power, precision: 0) %> <span class="text-sm font-normal text-white">W</span></dd>
+                  </div>
+                <% end %>
+
+                <% if @activity.average_hr.present? %>
+                  <div class="bg-cobalt-blue-500/20 rounded-lg p-4 border border-red-100">
+                    <dt class="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1 flex items-center">
+                      <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      Average Heart Rate
+                    </dt>
+                    <dd class="text-2xl font-bold text-red-900"><%= number_with_precision(@activity.average_hr, precision: 0) %> <span class="text-sm font-normal text-white">bpm</span></dd>
+                  </div>
+                <% end %>
+              </dl>
+
+              <% if @activity.description.present? %>
+                <div class="mt-6 pt-6 border-t border-shadow-grey-200">
+                  <dt class="text-sm font-semibold text-white/700 mb-3 uppercase tracking-wider">Description</dt>
+                  <dd class="text-white/700 whitespace-pre-wrap leading-relaxed bg-shadow-grey-700 rounded-lg p-4 border border-shadow-grey-200"><%= @activity.description %></dd>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Track Information -->
+          <% if @track.present? %>
+            <div class="bg-shadow-grey-800 rounded-xl shadow-lg border border-shadow-grey-100 overflow-hidden">
+              <div class="px-6 py-5 bg-gradient-to-r from-shadow-grey-700 to-shadow-grey-800 border-b border-shadow-grey-200">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                  <svg class="mr-2 h-5 w-5 text-cobalt-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                  Track Information
+                </h2>
+              </div>
+              <div class="px-6 py-6">
+                <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <% if @track.start_date.present? %>
+                    <div class="bg-shadow-grey-700 rounded-lg p-4">
+                      <dt class="text-xs font-semibold text-white/500 uppercase tracking-wider mb-1">Start Time</dt>
+                      <dd class="text-sm font-semibold text-white"><%= @track.start_date.strftime("%B %d, %Y") %></dd>
+                      <dd class="text-xs text-white/600 mt-1"><%= @track.start_date.strftime("%I:%M %p") %></dd>
+                    </div>
+                  <% end %>
+
+                  <% if @track.end_date.present? %>
+                    <div class="bg-shadow-grey-700 rounded-lg p-4">
+                      <dt class="text-xs font-semibold text-white/500 uppercase tracking-wider mb-1">End Time</dt>
+                      <dd class="text-sm font-semibold text-white"><%= @track.end_date.strftime("%B %d, %Y") %></dd>
+                      <dd class="text-xs text-white/600 mt-1"><%= @track.end_date.strftime("%I:%M %p") %></dd>
+                    </div>
+                  <% end %>
+
+                  <div class="bg-cobalt-blue-500/20 rounded-lg p-4 border border-shadow-grey-700">
+                    <dt class="text-xs font-semibold text-cobalt-blue-400 uppercase tracking-wider mb-1">Trackpoints</dt>
+                    <dd class="text-2xl font-bold text-white"><%= @trackpoints.count %></dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+          <div class="bg-gradient-to-br from-rich-cerulean-600 to-cobalt-blue-700 rounded-xl shadow-xl border border-indigo-800 overflow-hidden sticky top-20">
+            <div class="px-6 py-5 bg-shadow-grey-800/10 backdrop-blur-sm border-b border-shadow-grey-700">
+              <h2 class="text-xl font-semibold text-white flex items-center">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Quick Stats
+              </h2>
+            </div>
+            <div class="px-6 py-6 space-y-6">
+              <% if @activity.distance.present? && @activity.duration.present? && @activity.duration > 0 %>
+                <div class="bg-shadow-grey-800/10 backdrop-blur-sm rounded-lg p-4 border border-shadow-grey-700">
+                  <p class="text-xs font-semibold text-rich-cerulean-100 uppercase tracking-wider mb-2">Average Pace</p>
+                  <p class="text-3xl font-bold text-white">
+                    <%= format_pace(@activity.duration / 60.0 / @activity.distance) %>
+                    <span class="text-lg font-normal text-rich-cerulean-100">/km</span>
+                  </p>
+                </div>
+              <% end %>
+
+              <% if @activity.distance.present? && @activity.duration.present? && @activity.duration > 0 %>
+                <div class="bg-shadow-grey-800/10 backdrop-blur-sm rounded-lg p-4 border border-shadow-grey-700">
+                  <p class="text-xs font-semibold text-rich-cerulean-100 uppercase tracking-wider mb-2">Average Speed</p>
+                  <p class="text-3xl font-bold text-white">
+                    <%= number_with_precision(@activity.distance / (@activity.duration / 3600.0), precision: 2) %>
+                    <span class="text-lg font-normal text-rich-cerulean-100">km/h</span>
+                  </p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,11 +1,100 @@
-<div class="min-h-screen bg-gray-50">
-  <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-      <div class="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-        <div class="text-center">
-          <h1 class="text-4xl font-bold text-gray-900 mb-4">Hello User</h1>
-          <p class="text-gray-600 mb-4">Welcome to your dashboard!</p>
-          <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+<div class="min-h-screen">
+  <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+    <div class="px-4 sm:px-0">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-extrabold text-white sm:text-5xl">
+          <span class="bg-gradient-to-r text-rich-cerulean-400 bg-clip-text text-transparent">Dashboard</span>
+        </h1>
+        <p class="mt-3 text-lg text-white/600">Welcome back! Here's an overview of your training.</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Total Activities Card -->
+        <div class="bg-shadow-grey-800 rounded-xl shadow-lg border border-shadow-grey-100 overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rich-cerulean-500 via-indigo-500 to-purple-500"></div>
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="h-14 w-14 rounded-xl bg-gradient-to-br bg-cobalt-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-5 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-white/500 uppercase tracking-wider">Total Activities</dt>
+                  <dd class="mt-2 text-3xl font-bold text-white"><%= current_user.activities.count %></dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gradient-to-r from-rich-cerulean-50 to-cobalt-blue-50 px-6 py-4 border-t border-shadow-grey-100">
+            <%= link_to activities_path, class: "inline-flex items-center text-sm font-semibold text-cobalt-blue-300 hover:text-rich-cerulean-900 group-hover:translate-x-1 transition-transform duration-200" do %>
+              View all activities
+              <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Recent Activity Card -->
+        <% if current_user.activities.any? %>
+          <% recent_activity = current_user.activities.order(date: :desc, created_at: :desc).first %>
+          <div class="bg-shadow-grey-800 rounded-xl shadow-lg border border-shadow-grey-100 overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500"></div>
+            <div class="p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div class="h-14 w-14 rounded-xl bg-gradient-to-br bg-cobalt-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-5 flex-1 min-w-0">
+                  <dl>
+                    <dt class="text-sm font-medium text-white/500 uppercase tracking-wider truncate">Latest Activity</dt>
+                    <dd class="mt-2 text-lg font-bold text-white truncate"><%= recent_activity.title.presence || "Untitled" %></dd>
+                    <dd class="text-xs text-white/500 mt-1"><%= recent_activity.date&.strftime("%B %d, %Y") || "No date" %></dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-t border-shadow-grey-100">
+              <%= link_to activity_path(recent_activity), class: "inline-flex items-center text-sm font-semibold text-white hover:text-green-900 group-hover:translate-x-1 transition-transform duration-200" do %>
+                View details
+                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Quick Actions Card -->
+        <div class="bg-gradient-to-br bg-cobalt-blue-500 rounded-xl shadow-xl border border-purple-600 overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="h-14 w-14 rounded-xl bg-shadow-grey-800/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                  <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-5 flex-1">
+                <h3 class="text-sm font-semibold text-white/80 uppercase tracking-wider">Quick Actions</h3>
+                <p class="mt-2 text-lg font-bold text-white">Get Started</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-shadow-grey-800/10 backdrop-blur-sm px-6 py-4 border-t border-white/20">
+            <p class="text-sm text-white/80">Add your first activity to begin tracking your training.</p>
+          </div>
         </div>
       </div>
     </div>
