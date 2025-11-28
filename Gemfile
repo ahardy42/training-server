@@ -25,6 +25,9 @@ gem "jbuilder"
 # Authentication with Devise
 gem "devise"
 
+# Pagination
+gem "kaminari"
+
 # File parsing for activities
 gem "rubyfit" # For parsing Garmin FIT files
 gem "zlib" # For handling gzipped files (part of Ruby stdlib, but explicit for clarity)

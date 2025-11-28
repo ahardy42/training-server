@@ -5,7 +5,16 @@ class ActivitiesController < ApplicationController
   before_action :set_activity, only: [:show]
 
   def index
-    @activities = current_user.activities.order(date: :desc, created_at: :desc)
+    @activities = current_user.activities
+      .includes(track: :trackpoints)
+      .order(date: :desc, created_at: :desc)
+      .page(params[:page])
+      .per(10)
+    
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
   end
 
   def show

@@ -1,0 +1,151 @@
+<%= turbo_stream.append "activities-list" do %>
+  <% @activities.each do |activity| %>
+    <% trackpoints = activity.track&.trackpoints&.where.not(latitude: nil, longitude: nil)&.order(:timestamp) || [] %>
+    <div class="relative bg-shadow-grey-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-shadow-grey-700 hover:border-cobalt-blue-500">
+      <!-- Gradient accent bar -->
+      <div class="absolute top-0 left-0 right-0 h-1 bg-cobalt-blue-500 z-10"></div>
+      
+      <div class="flex">
+        <!-- Left side: Activity info -->
+        <div class="flex-1 p-6 min-h-[200px]">
+          <%= link_to activity_path(activity), class: "group" do %>
+            <!-- Header with icon and type -->
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                  <div class="h-12 w-12 rounded-xl bg-cobalt-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span class="text-white font-bold text-lg">
+                      <%= activity.activity_type&.first&.upcase || "A" %>
+                    </span>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-lg font-semibold text-rich-cerulean-400 group-hover:text-rich-cerulean-300 transition-colors duration-200 truncate">
+                    <%= activity.title.presence || "Untitled Activity" %>
+                  </h3>
+                  <% if activity.activity_type.present? %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cobalt-blue-500/20 text-cobalt-blue-300 border border-cobalt-blue-500/30 mt-1">
+                      <%= activity.activity_type %>
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+              <svg class="h-5 w-5 text-white/60 group-hover:text-cobalt-blue-400 group-hover:translate-x-1 transition-all duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          <% end %>
+
+          <!-- Stats -->
+          <div class="space-y-3 mt-6">
+            <% if activity.date.present? %>
+              <div class="flex items-center text-sm text-white/80">
+                <svg class="flex-shrink-0 mr-2 h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span class="font-medium"><%= activity.date.strftime("%B %d, %Y") %></span>
+              </div>
+            <% end %>
+
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-shadow-grey-700">
+              <% if activity.distance.present? %>
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-lg bg-shadow-grey-700 flex items-center justify-center">
+                      <svg class="h-4 w-4 text-cobalt-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-2">
+                    <p class="text-xs text-white/60">Distance</p>
+                    <p class="text-sm font-semibold text-white"><%= number_with_precision(activity.distance, precision: 2) %> km</p>
+                  </div>
+                </div>
+              <% end %>
+
+              <% if activity.duration.present? %>
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-lg bg-shadow-grey-700 flex items-center justify-center">
+                      <svg class="h-4 w-4 text-cobalt-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-2">
+                    <p class="text-xs text-white/60">Duration</p>
+                    <p class="text-sm font-semibold text-white"><%= format_duration(activity.duration) %></p>
+                  </div>
+                </div>
+              <% end %>
+
+              <% if activity.average_hr.present? %>
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-lg bg-shadow-grey-700 flex items-center justify-center">
+                      <svg class="h-4 w-4 text-cobalt-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-2">
+                    <p class="text-xs text-white/60">Avg HR</p>
+                    <p class="text-sm font-semibold text-white"><%= number_with_precision(activity.average_hr, precision: 0) %> bpm</p>
+                  </div>
+                </div>
+              <% end %>
+
+              <% if activity.elevation.present? %>
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-lg bg-shadow-grey-700 flex items-center justify-center">
+                      <svg class="h-4 w-4 text-cobalt-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-2">
+                    <p class="text-xs text-white/60">Elevation</p>
+                    <p class="text-sm font-semibold text-white"><%= number_with_precision(activity.elevation, precision: 0) %> m</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right side: Map -->
+        <% if trackpoints.any? %>
+          <div class="w-80 flex-shrink-0 border-l border-shadow-grey-700">
+            <div 
+              id="activity-map-<%= activity.id %>" 
+              class="w-full"
+              style="height: 200px;"
+              data-controller="static-activity-map"
+              data-static-activity-map-trackpoints-value="<%= trackpoints.map { |tp| [tp.latitude, tp.longitude] }.to_json %>"
+            ></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<% if @activities.next_page %>
+  <%= turbo_stream.replace "pagination" do %>
+    <%= turbo_frame_tag "pagination", src: activities_path(page: @activities.next_page, format: :turbo_stream), loading: :lazy do %>
+      <div class="mt-8 text-center">
+        <div class="inline-flex items-center px-4 py-2 text-white/60">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-cobalt-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Loading more activities...
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= turbo_stream.remove "pagination" %>
+<% end %>
