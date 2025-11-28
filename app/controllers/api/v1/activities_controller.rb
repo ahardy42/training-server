@@ -10,14 +10,19 @@ module Api
         @activities = current_user.activities
           .includes(:track)  # Only include track, not trackpoints (they're not needed in index)
           .order(date: :desc, created_at: :desc)
-        
-        # Optional pagination
-        if params[:page].present?
-          @activities = @activities.page(params[:page]).per(params[:per_page] || 10)
-        end
+          .page(params[:page] || 1)
+          .per(params[:per_page] || 10)
         
         render json: {
-          activities: @activities.map { |activity| serialize_activity(activity) }
+          activities: @activities.map { |activity| serialize_activity(activity) },
+          pagination: {
+            current_page: @activities.current_page,
+            per_page: @activities.limit_value,
+            total_pages: @activities.total_pages,
+            total_count: @activities.total_count,
+            next_page: @activities.next_page,
+            prev_page: @activities.prev_page
+          }
         }
       end
       
