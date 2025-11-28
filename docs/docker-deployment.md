@@ -162,6 +162,8 @@ Build ARM images on your development machine using Docker Buildx:
    # Log out and back in for group changes to take effect
    ```
 
+   **Important**: After adding your user to the docker group, you must log out and log back in (or use `newgrp docker`) for the changes to take effect. If you see permission errors, see the [Docker Permission Denied Error](#docker-permission-denied-error) section in Troubleshooting.
+
 2. **Clone or transfer your code**:
    ```bash
    git clone <repository-url>
@@ -330,6 +332,117 @@ This project includes Rake tasks for common Docker operations. Run `rake -T dock
 - `rake docker:logs_prod` - View production logs
 - `rake docker:console_prod` - Open Rails console in production
 
+## Docker Compose Commands for Raspberry Pi
+
+If you prefer to use `docker-compose` directly instead of Rake tasks, here are the equivalent commands for Raspberry Pi deployment:
+
+### Initial Setup
+
+**1. Build the production image:**
+```bash
+docker-compose -f docker-compose.prod.yml build
+```
+
+**2. Start the services:**
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+**3. Set up the database:**
+```bash
+# Create the database
+docker-compose -f docker-compose.prod.yml exec web bin/rails db:create
+
+# Run migrations
+docker-compose -f docker-compose.prod.yml exec web bin/rails db:migrate
+```
+
+### Daily Operations
+
+**View logs:**
+```bash
+# All services
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Just the web service
+docker-compose -f docker-compose.prod.yml logs -f web
+
+# Just the database service
+docker-compose -f docker-compose.prod.yml logs -f db
+```
+
+**Open Rails console:**
+```bash
+docker-compose -f docker-compose.prod.yml exec web bin/rails console
+```
+
+**Open database console:**
+```bash
+docker-compose -f docker-compose.prod.yml exec web bin/rails dbconsole
+```
+
+**Run migrations:**
+```bash
+docker-compose -f docker-compose.prod.yml exec web bin/rails db:migrate
+```
+
+**Check service status:**
+```bash
+docker-compose -f docker-compose.prod.yml ps
+```
+
+**Restart services:**
+```bash
+# Restart all services
+docker-compose -f docker-compose.prod.yml restart
+
+# Restart just the web service
+docker-compose -f docker-compose.prod.yml restart web
+
+# Restart just the database
+docker-compose -f docker-compose.prod.yml restart db
+```
+
+**Stop services:**
+```bash
+# Stop services (keeps containers)
+docker-compose -f docker-compose.prod.yml stop
+
+# Stop and remove containers (keeps volumes/data)
+docker-compose -f docker-compose.prod.yml down
+
+# Stop and remove everything including volumes (⚠️ deletes data)
+docker-compose -f docker-compose.prod.yml down -v
+```
+
+### Updating the Application
+
+**Pull latest code and rebuild:**
+```bash
+# Pull latest code
+git pull
+
+# Rebuild the image
+docker-compose -f docker-compose.prod.yml build
+
+# Restart with new image
+docker-compose -f docker-compose.prod.yml up -d
+
+# Run any new migrations
+docker-compose -f docker-compose.prod.yml exec web bin/rails db:migrate
+```
+
+### Quick Reference: Rake Task → Docker Compose Mapping
+
+| Rake Task | Docker Compose Command |
+|-----------|----------------------|
+| `rake docker:build_raspberry_pi` | `docker-compose -f docker-compose.prod.yml build` |
+| `rake docker:start_prod` | `docker-compose -f docker-compose.prod.yml up -d` |
+| `rake docker:stop_prod` | `docker-compose -f docker-compose.prod.yml down` |
+| `rake docker:setup_db_prod` | `docker-compose -f docker-compose.prod.yml exec web bin/rails db:create && docker-compose -f docker-compose.prod.yml exec web bin/rails db:migrate` |
+| `rake docker:logs_prod` | `docker-compose -f docker-compose.prod.yml logs -f` |
+| `rake docker:console_prod` | `docker-compose -f docker-compose.prod.yml exec web bin/rails console` |
+
 ## Environment Variables
 
 ### Required Variables
@@ -344,6 +457,50 @@ This project includes Rake tasks for common Docker operations. Run `rake -T dock
 - `RAILS_MAX_THREADS`: Maximum database connection pool size (default: 5)
 
 ## Troubleshooting
+
+### Docker Permission Denied Error
+
+If you see an error like:
+```
+docker.errors.DockerException: Error while fetching server API version: ('Connection aborted.', PermissionError(13, 'Permission denied'))
+```
+
+This means your user doesn't have permission to access the Docker daemon. Fix it by:
+
+1. **Add your user to the docker group**:
+   ```bash
+   sudo usermod -aG docker $USER
+   ```
+
+2. **Apply the group changes** (choose one method):
+   
+   **Option A: Log out and log back in** (recommended)
+   - Log out of your SSH session or terminal
+   - Log back in
+   
+   **Option B: Use newgrp** (temporary, for current session only):
+   ```bash
+   newgrp docker
+   ```
+
+3. **Verify it worked**:
+   ```bash
+   groups
+   # You should see 'docker' in the list
+   
+   # Test Docker access
+   docker ps
+   # Should work without sudo now
+   ```
+
+4. **If you're using SSH**, you may need to:
+   ```bash
+   # Disconnect and reconnect your SSH session
+   exit
+   # Then SSH back in
+   ```
+
+**Note**: If you're running commands via Rake tasks, make sure the user running the Rake task is in the docker group. If you're using `sudo` to run commands, you may need to use `sudo -E` to preserve environment variables, or better yet, fix the permissions so you don't need sudo.
 
 ### Database Connection Issues
 
