@@ -9,6 +9,7 @@ services:
       POSTGRES_USER: training_server
       POSTGRES_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
       POSTGRES_DB: training_server_production
+      POSTGRES_HOST_AUTH_METHOD: md5
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
     healthcheck:

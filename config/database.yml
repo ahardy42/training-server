@@ -84,6 +84,8 @@ production:
     database: training_server_production
     username: training_server
     password: <%= ENV["TRAINING_SERVER_DATABASE_PASSWORD"] %>
+    host: <%= ENV.fetch("POSTGRES_HOST", "db") %>
+    port: 5432
   cache:
     <<: *primary_production
     database: training_server_production_cache
