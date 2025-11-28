@@ -171,13 +171,26 @@ Build ARM images on your development machine using Docker Buildx:
    ```
 
 3. **Create production environment file**:
-   Create a `.env` file:
+   Create a `.env` file in the project root:
+   ```bash
+   # On your local machine, get the Rails master key:
+   cat config/master.key
+   
+   # Copy the output, then on Raspberry Pi create .env file:
+   nano .env
+   ```
+   
+   Add these lines to the `.env` file:
    ```bash
    TRAINING_SERVER_DATABASE_PASSWORD=your_secure_password_here
-   RAILS_MASTER_KEY=your_rails_master_key_here
+   RAILS_MASTER_KEY=your_rails_master_key_from_config_master_key_file
    ```
-
-   **Important**: Generate a strong password for the database and keep your `RAILS_MASTER_KEY` secure!
+   
+   **Important**: 
+   - The `RAILS_MASTER_KEY` must be exactly 32 characters (hexadecimal)
+   - Get it from `config/master.key` on your local machine
+   - Generate a strong password for the database
+   - Keep your `.env` file secure and never commit it to Git!
 
 4. **Build the production image**:
    ```bash

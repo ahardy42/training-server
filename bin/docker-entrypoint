@@ -8,7 +8,13 @@ fi
 
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
-  ./bin/rails db:prepare
+  # Check if database exists, if not create it
+  ./bin/rails db:create 2>/dev/null || true
+  
+  # Run migrations (this handles both new and existing databases)
+  # Using db:migrate instead of db:prepare to avoid schema loading issues
+  # with PostGIS schemas that already exist
+  ./bin/rails db:migrate || true
 fi
 
 exec "${@}"

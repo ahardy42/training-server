@@ -11,9 +11,13 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.0].define(version: 2025_11_28_163342) do
-  create_schema "tiger"
-  create_schema "tiger_data"
-  create_schema "topology"
+  # PostGIS schemas (tiger, tiger_data, topology) are created automatically
+  # by the PostGIS extension in kartoza/postgis and other PostGIS images.
+  # These are commented out to avoid "schema already exists" errors.
+  # If you need them and they don't exist, uncomment and they will be created:
+  # create_schema "tiger"
+  # create_schema "tiger_data"
+  # create_schema "topology"
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
