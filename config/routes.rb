@@ -14,4 +14,7 @@ Rails.application.routes.draw do
   root "dashboard#index"
 
   resources :activities, only: [:index, :show, :new, :create]
+  
+  get "maps", to: "maps#index"
+  get "maps/trackpoints", to: "maps#trackpoints"
 end
