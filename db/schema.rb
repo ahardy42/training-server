@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_28_000525) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_28_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,6 +27,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_28_000525) do
     t.decimal "average_hr"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["activity_type"], name: "index_activities_on_activity_type"
+    t.index ["date"], name: "index_activities_on_date"
+    t.index ["user_id", "activity_type"], name: "index_activities_on_user_id_and_activity_type"
+    t.index ["user_id", "date"], name: "index_activities_on_user_id_and_date"
     t.index ["user_id"], name: "index_activities_on_user_id"
   end
 
@@ -41,6 +45,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_28_000525) do
     t.float "elevation", limit: 24
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["timestamp", "latitude", "longitude"], name: "index_trackpoints_on_timestamp_and_coords", where: "((latitude IS NOT NULL) AND (longitude IS NOT NULL))"
+    t.index ["timestamp"], name: "index_trackpoints_on_timestamp"
     t.index ["track_id"], name: "index_trackpoints_on_track_id"
   end
 
