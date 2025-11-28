@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <%= javascript_include_tag "plotly", defer: false %>
+<% end %>
+
 <div class="min-h-screen">
   <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
     <div class="px-4 sm:px-0">
@@ -97,6 +101,37 @@
           </div>
         </div>
       </div>
+
+      <!-- Activity Trends Charts -->
+      <% if @activity_trends.present? %>
+        <div 
+          class="mt-8 bg-shadow-grey-800 rounded-xl shadow-lg border border-shadow-grey-700 overflow-hidden"
+          data-controller="dashboard-charts"
+          data-dashboard-charts-monthly-hours-value="<%= @activity_trends[:monthly_hours].to_json %>"
+          data-dashboard-charts-weekly-daily-time-value="<%= @activity_trends[:weekly_daily_time].to_json %>"
+          data-dashboard-charts-year-value="<%= @activity_trends[:year] %>"
+        >
+          <div class="px-6 py-5 border-b border-shadow-grey-700">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+              <svg class="mr-2 h-5 w-5 text-rich-cerulean-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Activity Trends
+            </h2>
+          </div>
+          <div class="px-6 py-6 space-y-8">
+            <!-- Monthly Hours Bar Chart -->
+            <div class="bg-shadow-grey-700 rounded-lg p-4">
+              <div data-dashboard-charts-target="monthlyChart" style="height: 400px;"></div>
+            </div>
+
+            <!-- Weekly/Daily Heatmap -->
+            <div class="bg-shadow-grey-700 rounded-lg p-4">
+              <div data-dashboard-charts-target="weeklyChart" style="height: 500px;"></div>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
