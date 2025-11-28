@@ -4,10 +4,15 @@
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
 # docker build -t training_server .
 # docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name training_server training_server
+#
+# For Raspberry Pi (ARM architecture), build with:
+# docker buildx build --platform linux/arm64 -t training_server .
+# Or use docker-compose which handles multi-arch automatically
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
+# This image supports multi-architecture (amd64, arm64, arm/v7) for Raspberry Pi deployment
 ARG RUBY_VERSION=3.2.2
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 

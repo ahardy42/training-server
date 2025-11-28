@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: training_server_db_prod
+    environment:
+      POSTGRES_USER: training_server
+      POSTGRES_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
+      POSTGRES_DB: training_server_production
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U training_server"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - training_server_network
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUBY_VERSION: 3.2.2
+    container_name: training_server_web_prod
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgresql://training_server:${TRAINING_SERVER_DATABASE_PASSWORD}@db:5432/training_server_production
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      TRAINING_SERVER_DATABASE_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_USER: training_server
+      POSTGRES_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
+    ports:
+      - "80:80"
+    volumes:
+      - storage_data:/rails/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - training_server_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data_prod:
+  storage_data:
+
+networks:
+  training_server_network:
+    driver: bridge
+
