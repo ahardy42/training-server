@@ -191,9 +191,14 @@ export default class extends Controller {
       plot_bgcolor: "#1f2937",
       paper_bgcolor: "#111827",
       font: { color: "#ffffff" },
-      margin: { l: 60, r: 60, t: 50, b: 60 },
+      margin: { l: 60, r: 60, t: 80, b: 60 },
       hovermode: "x unified",
       legend: {
+        orientation: "h",
+        x: 0.5,
+        xanchor: "center",
+        y: 1.1,
+        yanchor: "top",
         font: { color: "#ffffff" },
         bgcolor: "rgba(0,0,0,0)",
         bordercolor: "#374151"
@@ -201,10 +206,7 @@ export default class extends Controller {
     }
 
     const config_plotly = {
-      displayModeBar: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ["pan2d", "lasso2d"],
-      responsive: true
+      displaylogo: false
     }
 
     Plotly.newPlot(container, [trace1, trace2], layout, config_plotly)

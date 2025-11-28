@@ -1,5 +1,16 @@
 <% content_for :head do %>
   <%= javascript_include_tag "plotly", defer: false %>
+  <style>
+    /* Force modebar to display horizontally */
+    .js-plotly-plot .plotly .modebar {
+      flex-direction: row !important;
+    }
+    
+    .js-plotly-plot .plotly .modebar-group {
+      display: inline-flex !important;
+      flex-direction: row !important;
+    }
+  </style>
 <% end %>
 
 <div class="min-h-screen">

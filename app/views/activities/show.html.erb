@@ -9,6 +9,16 @@
       position: absolute;
       pointer-events: auto;
     }
+    
+    /* Force modebar to display horizontally */
+    .js-plotly-plot .plotly .modebar {
+      flex-direction: row !important;
+    }
+    
+    .js-plotly-plot .plotly .modebar-group {
+      display: inline-flex !important;
+      flex-direction: row !important;
+    }
   </style>
 <% end %>
 

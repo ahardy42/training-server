@@ -85,15 +85,22 @@ export default class extends Controller {
       plot_bgcolor: '#1f2937',
       paper_bgcolor: '#111827',
       font: { color: '#ffffff' },
-      margin: { l: 60, r: 40, t: 60, b: 60 },
-      hovermode: 'x unified'
+      margin: { l: 60, r: 40, t: 80, b: 60 },
+      hovermode: 'x unified',
+      legend: {
+        orientation: 'h',
+        x: 0.5,
+        xanchor: 'center',
+        y: 1.1,
+        yanchor: 'top',
+        font: { color: '#ffffff' },
+        bgcolor: 'rgba(0,0,0,0)',
+        bordercolor: '#374151'
+      }
     }
 
     const config = {
-      displayModeBar: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ['pan2d', 'lasso2d'],
-      responsive: true
+      displaylogo: false
     }
 
     Plotly.newPlot(this.monthlyChartTarget, [trace], layout, config)
@@ -194,15 +201,22 @@ export default class extends Controller {
       plot_bgcolor: '#1f2937',
       paper_bgcolor: '#111827',
       font: { color: '#ffffff' },
-      margin: { l: 80, r: 40, t: 60, b: 100 },
-      hovermode: 'closest'
+      margin: { l: 80, r: 40, t: 80, b: 100 },
+      hovermode: 'closest',
+      legend: {
+        orientation: 'h',
+        x: 0.5,
+        xanchor: 'center',
+        y: 1.1,
+        yanchor: 'top',
+        font: { color: '#ffffff' },
+        bgcolor: 'rgba(0,0,0,0)',
+        bordercolor: '#374151'
+      }
     }
 
     const config = {
-      displayModeBar: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ['pan2d', 'lasso2d'],
-      responsive: true
+      displaylogo: false
     }
 
     Plotly.newPlot(this.weeklyChartTarget, [trace], layout, config)
