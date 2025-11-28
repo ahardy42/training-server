@@ -4,7 +4,7 @@ module Api
   module V1
     class AuthController < Api::BaseController
       # Skip authentication for login/refresh endpoints
-      skip_before_action :authenticate_user!, only: [:login, :refresh]
+      skip_before_action :authenticate_user_from_token!, only: [:login, :refresh]
       
       # POST /api/v1/auth/login
       def login
