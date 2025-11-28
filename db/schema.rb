@@ -11,20 +11,19 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.0].define(version: 2025_11_28_163342) do
-  # PostGIS schemas (tiger, tiger_data, topology) are created automatically
-  # by the PostGIS extension in kartoza/postgis and other PostGIS images.
-  # These are commented out to avoid "schema already exists" errors.
-  # If you need them and they don't exist, uncomment and they will be created:
-  # create_schema "tiger"
-  # create_schema "tiger_data"
-  # create_schema "topology"
-
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
-  enable_extension "tiger.postgis_tiger_geocoder"
-  enable_extension "topology.postgis_topology"
+  
+  # Note: tiger and topology extensions are not needed for this application
+  # They were accidentally included from dev environment but are not used.
+  # If you need them, uncomment and ensure the schemas exist first:
+  # execute("CREATE SCHEMA IF NOT EXISTS tiger")
+  # execute("CREATE SCHEMA IF NOT EXISTS tiger_data")  
+  # execute("CREATE SCHEMA IF NOT EXISTS topology")
+  # enable_extension "tiger.postgis_tiger_geocoder"
+  # enable_extension "topology.postgis_topology"
 
   create_table "activities", force: :cascade do |t|
     t.bigint "user_id", null: false
