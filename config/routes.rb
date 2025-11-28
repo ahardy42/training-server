@@ -20,4 +20,11 @@ Rails.application.routes.draw do
   
   get "settings", to: "settings#show"
   patch "settings", to: "settings#update"
+  
+  # API routes
+  namespace :api do
+    namespace :v1 do
+      resources :activities, only: [:index, :show, :create, :update]
+    end
+  end
 end
