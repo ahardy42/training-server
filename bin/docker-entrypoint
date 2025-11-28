@@ -11,10 +11,11 @@ if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   # Check if database exists, if not create it
   ./bin/rails db:create 2>/dev/null || true
   
-  # Run migrations (this handles both new and existing databases)
-  # Using db:migrate instead of db:prepare to avoid schema loading issues
-  # with PostGIS schemas that already exist
-  ./bin/rails db:migrate || true
+  # Run migrations only if there are pending migrations
+  # This avoids errors from trying to recreate existing indexes/tables
+  if ./bin/rails db:migrate:status 2>/dev/null | grep -q "down"; then
+    ./bin/rails db:migrate 2>&1 | grep -v "already exists" || true
+  fi
 fi
 
 exec "${@}"

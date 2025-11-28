@@ -37,6 +37,7 @@ services:
       POSTGRES_HOST: db
       POSTGRES_USER: training_server
       POSTGRES_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
+      PORT: 3000
     ports:
       - "80:80"
     volumes:
