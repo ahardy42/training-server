@@ -46,12 +46,12 @@ class MapsController < ApplicationController
     end
 
     # Build the base query using ActiveRecord
-    # With proper indexes, this will be fast
+    # With PostGIS spatial indexes, this will be very fast
     base_query = Trackpoint
       .joins(track: :activity)
       .where(activities: { user_id: current_user.id })
       .where(timestamp: start_date.beginning_of_day..end_date.end_of_day)
-      .where.not(latitude: nil, longitude: nil)
+      .where.not(location: nil) # Use PostGIS geometry column instead of checking lat/lng separately
 
     # Filter by activity type if provided
     if params[:activity_type].present? && params[:activity_type] != 'all'
@@ -59,26 +59,20 @@ class MapsController < ApplicationController
     end
 
     # Filter by map bounds if provided (for zoomed/zoomed views)
+    # Use PostGIS spatial functions for efficient bounding box queries
     if params[:north].present? && params[:south].present? && params[:east].present? && params[:west].present?
       north = params[:north].to_f
       south = params[:south].to_f
       east = params[:east].to_f
       west = params[:west].to_f
       
-      # Handle longitude wrapping (east might be less than west if crossing the date line)
-      if east < west
-        # Crosses the date line - need OR condition
-        base_query = base_query.where(
-          "(latitude >= ? AND latitude <= ?) AND (longitude >= ? OR longitude <= ?)",
-          south, north, west, east
-        )
-      else
-        # Normal case - simple bounding box
-        base_query = base_query.where(
-          "latitude >= ? AND latitude <= ? AND longitude >= ? AND longitude <= ?",
-          south, north, west, east
-        )
-      end
+      # Create a bounding box using PostGIS ST_MakeEnvelope
+      # ST_MakeEnvelope(xmin, ymin, xmax, ymax, srid)
+      # Note: PostGIS uses (longitude, latitude) order, and we use SRID 4326 (WGS84)
+      base_query = base_query.where(
+        "ST_Within(trackpoints.location, ST_MakeEnvelope(?, ?, ?, ?, 4326))",
+        west, south, east, north
+      )
     end
 
     # Get count efficiently (uses COUNT(*) which is fast with indexes)
@@ -137,12 +131,9 @@ class MapsController < ApplicationController
         east = params[:east].to_f
         west = params[:west].to_f
         
-        if east < west
-          # Crosses date line
-          "AND tp.latitude >= #{south} AND tp.latitude <= #{north} AND (tp.longitude >= #{west} OR tp.longitude <= #{east})"
-        else
-          "AND tp.latitude >= #{south} AND tp.latitude <= #{north} AND tp.longitude >= #{west} AND tp.longitude <= #{east}"
-        end
+        # Use PostGIS ST_Within for efficient spatial filtering
+        # ST_MakeEnvelope(xmin, ymin, xmax, ymax, srid)
+        "AND ST_Within(tp.location, ST_MakeEnvelope(#{west}, #{south}, #{east}, #{north}, 4326))"
       else
         ""
       end
@@ -164,8 +155,7 @@ class MapsController < ApplicationController
           WHERE a.user_id = #{user_id}
             AND tp.timestamp >= #{ActiveRecord::Base.connection.quote(start_ts)}
             AND tp.timestamp <= #{ActiveRecord::Base.connection.quote(end_ts)}
-            AND tp.latitude IS NOT NULL
-            AND tp.longitude IS NOT NULL
+            AND tp.location IS NOT NULL
             #{activity_type_filter}
             #{bounds_filter}
         ) sampled
