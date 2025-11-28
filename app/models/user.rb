@@ -5,7 +5,7 @@ class User < ApplicationRecord
 
   has_many :activities, dependent: :destroy
 
-  enum units: { metric: "metric", imperial: "imperial" }
+  enum :units, { metric: "metric", imperial: "imperial" }
 
   validates :height, numericality: { greater_than: 0, allow_nil: true }
   validates :weight, numericality: { greater_than: 0, allow_nil: true }

@@ -17,4 +17,7 @@ Rails.application.routes.draw do
   
   get "maps", to: "maps#index"
   get "maps/trackpoints", to: "maps#trackpoints"
+  
+  get "settings", to: "settings#show"
+  patch "settings", to: "settings#update"
 end
