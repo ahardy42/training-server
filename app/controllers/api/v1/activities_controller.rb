@@ -3,12 +3,12 @@
 module Api
   module V1
     class ActivitiesController < Api::BaseController
-      before_action :set_activity, only: [:show, :update]
+      before_action :set_activity, only: [:update]
       
       # GET /api/v1/activities
       def index
         @activities = current_user.activities
-          .includes(track: :trackpoints)
+          .includes(:track)  # Only include track, not trackpoints (they're not needed in index)
           .order(date: :desc, created_at: :desc)
         
         # Optional pagination
@@ -23,7 +23,14 @@ module Api
       
       # GET /api/v1/activities/:id
       def show
+        # Eager load trackpoints only for the show action where they're needed
+        @activity = current_user.activities
+          .includes(track: :trackpoints)
+          .find(params[:id])
+        
         render json: serialize_activity(@activity, include_trackpoints: true)
+      rescue ActiveRecord::RecordNotFound
+        render_json_error("Activity not found", status: :not_found)
       end
       
       # POST /api/v1/activities

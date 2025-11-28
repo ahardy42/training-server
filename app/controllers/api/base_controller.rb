@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 module Api
-  class BaseController < ApplicationController
-    # Skip CSRF token verification for API requests
-    skip_before_action :verify_authenticity_token
+  class BaseController < ActionController::API
+    include ActionController::MimeResponds
     
     # Require authentication for all API endpoints
     before_action :authenticate_user_from_token!
