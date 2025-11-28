@@ -24,6 +24,13 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
+      # Authentication routes
+      post "auth/login", to: "auth#login"
+      post "auth/refresh", to: "auth#refresh"
+      post "auth/logout", to: "auth#logout"
+      get "auth/me", to: "auth#me"
+      
+      # Resource routes
       resources :activities, only: [:index, :show, :create, :update]
     end
   end

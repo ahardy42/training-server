@@ -25,6 +25,9 @@ gem "jbuilder"
 # Authentication with Devise
 gem "devise"
 
+# JWT for API authentication
+gem "jwt"
+
 # Pagination
 gem "kaminari"
 
