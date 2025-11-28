@@ -57,7 +57,7 @@
               </div>
               <div class="ml-2">
                 <p class="text-xs text-white/60">Distance</p>
-                <p class="text-sm font-semibold text-white"><%= number_with_precision(activity.distance, precision: 2) %> km</p>
+                <p class="text-sm font-semibold text-white"><%= format_distance(activity.distance) %> <%= distance_unit %></p>
               </div>
             </div>
           <% end %>
@@ -105,7 +105,7 @@
               </div>
               <div class="ml-2">
                 <p class="text-xs text-white/60">Elevation</p>
-                <p class="text-sm font-semibold text-white"><%= number_with_precision(activity.elevation, precision: 0) %> m</p>
+                <p class="text-sm font-semibold text-white"><%= format_elevation(activity.elevation) %> <%= elevation_unit %></p>
               </div>
             </div>
           <% end %>

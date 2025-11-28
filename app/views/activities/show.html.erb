@@ -97,7 +97,7 @@
                       </svg>
                       Distance
                     </dt>
-                    <dd class="text-2xl font-bold text-white"><%= number_with_precision(@activity.distance, precision: 2) %> <span class="text-sm font-normal text-white/70">km</span></dd>
+                    <dd class="text-2xl font-bold text-white"><%= format_distance(@activity.distance) %> <span class="text-sm font-normal text-white/70"><%= distance_unit %></span></dd>
                   </div>
                 <% end %>
 
@@ -121,7 +121,7 @@
                       </svg>
                       Elevation
                     </dt>
-                    <dd class="text-2xl font-bold text-white"><%= number_with_precision(@activity.elevation, precision: 0) %> <span class="text-sm font-normal text-white/70">m</span></dd>
+                    <dd class="text-2xl font-bold text-white"><%= format_elevation(@activity.elevation) %> <span class="text-sm font-normal text-white/70"><%= elevation_unit %></span></dd>
                   </div>
                 <% end %>
 
@@ -154,7 +154,7 @@
                     <dt class="text-xs font-semibold text-white/500 uppercase tracking-wider mb-1">Average Pace</dt>
                     <dd class="text-2xl font-bold text-white">
                       <%= format_pace(@activity.duration / 60.0 / @activity.distance) %>
-                      <span class="text-sm font-normal text-white/70">/km</span>
+                      <span class="text-sm font-normal text-white/70"><%= pace_unit %></span>
                     </dd>
                   </div>
                 <% end %>
@@ -163,8 +163,8 @@
                   <div class="bg-shadow-grey-700 rounded-lg p-4">
                     <dt class="text-xs font-semibold text-white/500 uppercase tracking-wider mb-1">Average Speed</dt>
                     <dd class="text-2xl font-bold text-white">
-                      <%= number_with_precision(@activity.distance / (@activity.duration / 3600.0), precision: 2) %>
-                      <span class="text-sm font-normal text-white/70">km/h</span>
+                      <%= format_speed(@activity.distance / (@activity.duration / 3600.0)) %>
+                      <span class="text-sm font-normal text-white/70"><%= speed_unit %></span>
                     </dd>
                   </div>
                 <% end %>
