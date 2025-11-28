@@ -584,14 +584,21 @@ This means Docker is trying to run an image built for a different architecture (
    docker pull --platform linux/arm64 postgis/postgis:16-3.4
    ```
 
-3. **If the postgis/postgis image doesn't support ARM**, you can use an alternative:
-   
-   Update `docker-compose.prod.yml` to use a different PostGIS image:
-   ```yaml
-   db:
-     image: kartoza/postgis:16-3.4  # Alternative that supports ARM
-     platform: linux/arm64
+3. **The docker-compose.prod.yml now uses `kartoza/postgis:16-3.4`** which supports ARM architecture. If you still have issues:
+
+   **Option A: Verify the image was pulled correctly:**
+   ```bash
+   docker pull --platform linux/arm64 kartoza/postgis:16-3.4
+   docker-compose -f docker-compose.prod.yml down
+   docker-compose -f docker-compose.prod.yml up -d
    ```
+
+   **Option B: If kartoza/postgis doesn't work, check your Raspberry Pi model:**
+   ```bash
+   uname -m
+   ```
+   - For 32-bit Raspberry Pi (armv7l), you may need to use `linux/arm/v7` instead of `linux/arm64`
+   - Update the platform in docker-compose.prod.yml accordingly
    
    Or build PostgreSQL with PostGIS manually:
    ```yaml
