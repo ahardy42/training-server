@@ -1,7 +1,7 @@
 <% content_for :head do %>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-  <%= javascript_include_tag "https://cdn.plot.ly/plotly-latest.min.js", defer: false %>
+  <%= javascript_include_tag "plotly", defer: false %>
   <style>
     /* Ensure header is above Leaflet map panes (which use z-index up to ~650) */
     .activity-header-overlay {
