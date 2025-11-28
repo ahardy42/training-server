@@ -39,12 +39,17 @@ export default class extends Controller {
     let xAxisTitle
     
     if (this.basis === "distance") {
-      xAxis = data.distance
+      xAxis = data.distance || []
       xAxisTitle = `Distance (${this.distanceUnitValue})`
     } else {
       // Convert seconds to hours for better display
-      xAxis = data.time_seconds.map(seconds => seconds / 3600.0)
+      xAxis = (data.time_seconds || []).map(seconds => seconds / 3600.0)
       xAxisTitle = "Time (hours)"
+    }
+
+    // If x-axis data is empty, don't render any charts
+    if (!xAxis || xAxis.length === 0) {
+      return
     }
 
     // Render each chart
@@ -85,7 +90,19 @@ export default class extends Controller {
   }
 
   renderChart(container, config, xAxis, xAxisTitle) {
-    if (!container || !config.data || config.data.length === 0) {
+    if (!container) {
+      return
+    }
+
+    // Get the chart card wrapper
+    const chartCard = container.closest('.bg-shadow-grey-700')
+
+    // Check if data exists and is an array
+    if (!config.data || !Array.isArray(config.data) || config.data.length === 0) {
+      // Hide the chart container's parent (the card wrapper)
+      if (chartCard) {
+        chartCard.style.display = 'none'
+      }
       return
     }
 
@@ -100,9 +117,17 @@ export default class extends Controller {
       }
     })
 
+    // If no valid data points after filtering, hide the chart
     if (filteredData.length === 0) {
-      container.innerHTML = `<div class="text-center text-white/60 py-8">No ${config.title.toLowerCase()} data available</div>`
+      if (chartCard) {
+        chartCard.style.display = 'none'
+      }
       return
+    }
+
+    // Ensure the chart card is visible if we have data
+    if (chartCard) {
+      chartCard.style.display = ''
     }
 
     const elevationData = this.chartDataValue.elevation
