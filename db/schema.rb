@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_05_214728) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_28_000525) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -33,12 +33,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_214728) do
   create_table "trackpoints", force: :cascade do |t|
     t.bigint "track_id", null: false
     t.datetime "timestamp"
-    t.decimal "latitude", precision: 10, scale: 8
-    t.decimal "longitude", precision: 11, scale: 8
-    t.decimal "heartrate"
-    t.decimal "power"
-    t.decimal "cadence"
-    t.decimal "elevation"
+    t.float "latitude", limit: 24
+    t.float "longitude", limit: 24
+    t.integer "heartrate", limit: 2
+    t.integer "power"
+    t.integer "cadence", limit: 2
+    t.float "elevation", limit: 24
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["track_id"], name: "index_trackpoints_on_track_id"
