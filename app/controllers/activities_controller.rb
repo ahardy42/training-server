@@ -20,6 +20,11 @@ class ActivitiesController < ApplicationController
   def show
     @track = @activity.track
     @trackpoints = @track&.trackpoints&.where.not(latitude: nil, longitude: nil)&.order(:timestamp) || []
+    
+    # Prepare chart data if we have trackpoints
+    if @trackpoints.any?
+      @chart_data = prepare_chart_data(@trackpoints)
+    end
   end
 
   def new
@@ -290,6 +295,115 @@ class ActivitiesController < ApplicationController
 
   def activity_params
     params.require(:activity).permit(:activity_type, :date, :title, :description, :distance, :duration, :elevation, :average_power, :average_hr)
+  end
+
+  def prepare_chart_data(trackpoints)
+    return nil if trackpoints.empty?
+
+    # Calculate cumulative distance and time arrays
+    cumulative_distance_km = []
+    cumulative_time_seconds = []
+    elevations = []
+    heartrates = []
+    powers = []
+    cadences = []
+    speeds_kmh = []
+    paces_min_per_km = []
+    
+    total_distance = 0.0
+    start_time = trackpoints.first.timestamp
+    
+    trackpoints.each_with_index do |tp, index|
+      # Calculate cumulative distance (Haversine formula)
+      if index > 0
+        prev_tp = trackpoints[index - 1]
+        if prev_tp.latitude && prev_tp.longitude && tp.latitude && tp.longitude
+          # Haversine formula to calculate distance between two points
+          lat1_rad = prev_tp.latitude * Math::PI / 180
+          lat2_rad = tp.latitude * Math::PI / 180
+          delta_lat = (tp.latitude - prev_tp.latitude) * Math::PI / 180
+          delta_lon = (tp.longitude - prev_tp.longitude) * Math::PI / 180
+          
+          a = Math.sin(delta_lat / 2) ** 2 +
+              Math.cos(lat1_rad) * Math.cos(lat2_rad) *
+              Math.sin(delta_lon / 2) ** 2
+          c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+          distance_km = 6371 * c # Earth radius in km
+          
+          total_distance += distance_km
+        end
+      end
+      
+      cumulative_distance_km << total_distance
+      
+      # Calculate cumulative time in seconds
+      if tp.timestamp && start_time
+        time_diff = (tp.timestamp - start_time).to_f
+        cumulative_time_seconds << time_diff
+      else
+        cumulative_time_seconds << (index * 1.0) # Fallback: assume 1 second intervals
+      end
+      
+      # Collect data points
+      elevations << (tp.elevation || 0)
+      heartrates << (tp.heartrate || nil)
+      powers << (tp.power || nil)
+      cadences << (tp.cadence || nil)
+      
+      # Calculate speed and pace from segment distance and time
+      if index > 0
+        prev_tp = trackpoints[index - 1]
+        segment_distance_km = cumulative_distance_km[index] - cumulative_distance_km[index - 1]
+        segment_time_seconds = cumulative_time_seconds[index] - cumulative_time_seconds[index - 1]
+        
+        if segment_time_seconds > 0 && segment_distance_km > 0
+          # Speed in km/h
+          speed_kmh = (segment_distance_km / segment_time_seconds) * 3600.0
+          speeds_kmh << speed_kmh
+          
+          # Pace in min/km
+          pace_min_per_km = (segment_time_seconds / 60.0) / segment_distance_km
+          paces_min_per_km << pace_min_per_km
+        else
+          speeds_kmh << nil
+          paces_min_per_km << nil
+        end
+      else
+        speeds_kmh << nil
+        paces_min_per_km << nil
+      end
+    end
+    
+    # Convert units based on user preference
+    if current_user&.units == "imperial"
+      # Convert distance from km to miles
+      distance_data = cumulative_distance_km.map { |km| km * 0.621371 }
+      
+      # Convert elevation from meters to feet
+      elevation_data = elevations.map { |m| m * 3.28084 }
+      
+      # Convert speed from km/h to mph
+      speed_data = speeds_kmh.map { |kmh| kmh ? kmh * 0.621371 : nil }
+      
+      # Convert pace from min/km to min/mile
+      pace_data = paces_min_per_km.map { |pace| pace ? pace * 1.60934 : nil }
+    else
+      distance_data = cumulative_distance_km
+      elevation_data = elevations
+      speed_data = speeds_kmh
+      pace_data = paces_min_per_km
+    end
+    
+    {
+      distance: distance_data,
+      time_seconds: cumulative_time_seconds,
+      elevation: elevation_data,
+      heartrate: heartrates,
+      power: powers,
+      cadence: cadences,
+      speed: speed_data,
+      pace: pace_data
+    }
   end
 end
 

@@ -33,6 +33,9 @@ gem "rubyfit" # For parsing Garmin FIT files
 gem "zlib" # For handling gzipped files (part of Ruby stdlib, but explicit for clarity)
 gem "rubyzip" # For handling zip files for bulk uploads
 
+# Charting library
+gem "plotly-rails-js" # Plotly.js wrapper for Rails
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
