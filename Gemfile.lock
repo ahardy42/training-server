@@ -388,6 +388,7 @@ DEPENDENCIES
   rails (~> 8.0.3)
   rubocop-rails-omakase
   rubyfit
+  rubyzip
   selenium-webdriver
   solid_cable
   solid_cache
