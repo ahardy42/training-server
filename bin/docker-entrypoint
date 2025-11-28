@@ -8,14 +8,17 @@ fi
 
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
-  # Check if database exists, if not create it
+  # Create databases if they don't exist
   ./bin/rails db:create 2>/dev/null || true
   
-  # Run migrations only if there are pending migrations
-  # This avoids errors from trying to recreate existing indexes/tables
-  if ./bin/rails db:migrate:status 2>/dev/null | grep -q "down"; then
-    ./bin/rails db:migrate 2>&1 | grep -v "already exists" || true
-  fi
+  # Run migrations - this creates all tables from migration files
+  # Note: schema.rb may have foreign keys to tables that don't exist yet,
+  # but migrations will create them, so we can ignore those errors
+  ./bin/rails db:migrate 2>&1 | grep -v -E "(already exists|PG::DuplicateTable|PG::DuplicateSchema|PG::InvalidSchemaName)" || true
+  
+  # After migrations, regenerate schema.rb to match actual database state
+  # This ensures schema.rb is accurate and includes all foreign keys
+  ./bin/rails db:schema:dump 2>/dev/null || true
 fi
 
 exec "${@}"

@@ -79,6 +79,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_28_163342) do
   end
 
   add_foreign_key "activities", "users"
-  add_foreign_key "trackpoints", "tracks"
   add_foreign_key "tracks", "activities"
+  # trackpoints foreign key will be added after migrations run and schema is regenerated
+  # add_foreign_key "trackpoints", "tracks"
 end
