@@ -50,14 +50,7 @@ export default class extends Controller {
       y: hours,
       type: 'bar',
       marker: {
-        color: hours.map(h => {
-          // Color gradient based on value
-          if (h === 0) return '#374151'
-          if (h < 10) return '#3b82f6'
-          if (h < 20) return '#8b5cf6'
-          if (h < 30) return '#ec4899'
-          return '#ef4444'
-        }),
+        color: '#6899ca', // rich-cerulean-400
         line: {
           color: '#1f2937',
           width: 1
@@ -125,7 +118,7 @@ export default class extends Controller {
     // Prepare data for heatmap
     // Rows = days of week (Sunday = 0 to Saturday = 6)
     // Columns = weeks
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     const z = []
 
     // Build z matrix: rows are days (0-6), columns are weeks
@@ -157,25 +150,39 @@ export default class extends Controller {
       chartCard.style.display = ''
     }
 
+    // Build colorscale with cerulean blue and opacity based on value
+    // rich-cerulean-400: #6899ca (RGB: 104, 153, 202)
+    // Background: #111827 (RGB: 17, 24, 39)
+    // To show opacity in colorbar, we blend cerulean blue with background
+    // Opacity ranges from 0.1 (low) to 1.0 (high)
+    // Blend formula: color = cerulean * opacity + background * (1 - opacity)
+    const colorscale = []
+    for (let i = 0; i <= 10; i++) {
+      const ratio = i / 10
+      const opacity = 0.1 + (ratio * 0.9) // 0.1 to 1.0
+      // Blend cerulean blue (#6899ca = rgb(104, 153, 202)) with background (#111827 = rgb(17, 24, 39))
+      const r = Math.round(104 * opacity + 17 * (1 - opacity))
+      const g = Math.round(153 * opacity + 24 * (1 - opacity))
+      const b = Math.round(202 * opacity + 39 * (1 - opacity))
+      colorscale.push([ratio, `rgb(${r}, ${g}, ${b})`])
+    }
+
     const trace = {
       z: z,
       x: weekKeys,
       y: dayNames,
       type: 'heatmap',
-      colorscale: [
-        [0, '#1f2937'],      // No activity - dark gray
-        [0.1, '#3b82f6'],    // Low activity - blue
-        [0.3, '#8b5cf6'],    // Medium activity - purple
-        [0.6, '#ec4899'],    // High activity - pink
-        [1.0, '#ef4444']     // Very high activity - red
-      ],
+      colorscale: colorscale,
       colorbar: {
         title: {
           text: 'Hours',
           font: { color: '#ffffff' }
         },
         tickfont: { color: '#ffffff' },
-        tickcolor: '#ffffff'
+        tickcolor: '#ffffff',
+        outlinecolor: '#374151',
+        bordercolor: '#374151',
+        bgcolor: 'rgba(0,0,0,0)'
       },
       hovertemplate: 'Week: %{x}<br>Day: %{y}<br>Hours: %{z:.2f}<extra></extra>'
     }
@@ -189,14 +196,14 @@ export default class extends Controller {
         title: { text: 'Week', font: { color: '#ffffff' } },
         gridcolor: '#374151',
         color: '#9ca3af',
-        showgrid: true,
+        showgrid: false,
         side: 'bottom'
       },
       yaxis: {
         title: { text: 'Day of Week', font: { color: '#ffffff' } },
         gridcolor: '#374151',
         color: '#9ca3af',
-        showgrid: true
+        showgrid: false
       },
       plot_bgcolor: '#1f2937',
       paper_bgcolor: '#111827',
