@@ -2,9 +2,43 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     #map {
-      height: calc(100vh - 200px);
+      height: calc(100vh - 64px); /* Full height minus header */
       width: 100%;
       z-index: 1;
+    }
+    
+    .settings-panel {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      z-index: 1000;
+    }
+    
+    .settings-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: all 0.3s ease-in-out;
+    }
+    
+    .settings-panel.collapsed .settings-content {
+      width: auto;
+    }
+    
+    .settings-panel.expanded .settings-content {
+      width: 400px;
+    }
+    
+    .settings-form {
+      max-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: all 0.3s ease-in-out;
+    }
+    
+    .settings-panel.expanded .settings-form {
+      max-width: 400px;
+      opacity: 1;
     }
   </style>
   <!-- Load Leaflet as a global script -->
@@ -13,70 +47,112 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <% end %>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div class="mb-6">
-    <h1 class="text-3xl font-bold text-white mb-4">Activity Heatmap</h1>
-    <p class="text-shadow-grey-300 mb-6">View all your activity locations over a selected time period</p>
-    
-    <div class="bg-shadow-grey-800 rounded-lg p-6 mb-6" data-controller="map">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-        <div>
-          <label for="activity_type" class="block text-sm font-medium text-white mb-2">Activity Type</label>
-          <select 
-            id="activity_type" 
-            name="activity_type" 
-            data-map-target="activityType"
-            data-action="change->map#updateMap"
-            class="w-full px-4 py-2 bg-shadow-grey-700 border border-shadow-grey-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cobalt-blue-500"
-          >
-            <option value="all" <%= 'selected' unless params[:activity_type].present? && params[:activity_type] != 'all' %>>All Activities</option>
-            <% @activity_types.each do |activity_type| %>
-              <option value="<%= activity_type %>" <%= 'selected' if params[:activity_type] == activity_type %>><%= activity_type.humanize %></option>
-            <% end %>
-          </select>
-        </div>
-        <div>
-          <label for="start_date" class="block text-sm font-medium text-white mb-2">Start Date</label>
-          <input 
-            type="date" 
-            id="start_date" 
-            name="start_date" 
-            value="<%= @start_date %>"
-            data-map-target="startDate"
-            data-action="change->map#updateMap"
-            class="w-full px-4 py-2 bg-shadow-grey-700 border border-shadow-grey-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cobalt-blue-500"
-          />
-        </div>
-        <div>
-          <label for="end_date" class="block text-sm font-medium text-white mb-2">End Date</label>
-          <input 
-            type="date" 
-            id="end_date" 
-            name="end_date" 
-            value="<%= @end_date %>"
-            data-map-target="endDate"
-            data-action="change->map#updateMap"
-            class="w-full px-4 py-2 bg-shadow-grey-700 border border-shadow-grey-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cobalt-blue-500"
-          />
-        </div>
-        <div class="flex items-end">
-          <button 
-            type="button"
-            data-action="click->map#updateMap"
-            class="w-full px-6 py-2 bg-cobalt-blue-500 hover:bg-cobalt-blue-600 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-          >
-            Update Map
-          </button>
+<div class="relative" style="height: calc(100vh - 64px);" data-controller="map">
+  <!-- Full screen map -->
+  <div id="map" data-map-target="mapContainer"></div>
+  
+  <!-- Collapsible Settings Panel -->
+  <div class="settings-panel collapsed" data-controller="settings-panel" data-settings-panel-expanded-value="false">
+    <div class="settings-content">
+      <!-- Settings Button (toggles between settings and close icon) -->
+      <button
+        type="button"
+        data-action="click->settings-panel#toggle"
+        data-settings-panel-target="toggleButton"
+        class="flex-shrink-0 bg-shadow-grey-800 hover:bg-shadow-grey-700 text-white p-3 rounded-lg shadow-lg border border-shadow-grey-600 transition-all duration-200 z-10"
+        title="Settings"
+      >
+        <!-- Settings Icon (shown when collapsed) -->
+        <svg 
+          data-settings-panel-target="settingsIcon"
+          class="w-6 h-6" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <!-- Close Icon (shown when expanded) -->
+        <svg 
+          data-settings-panel-target="closeIcon"
+          class="w-6 h-6 hidden" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <!-- Settings Form (collapsible, expands around button) -->
+      <div class="settings-form bg-shadow-grey-800 rounded-lg shadow-xl border border-shadow-grey-600">
+        <div class="p-6">
+          <div class="mb-4">
+            <h2 class="text-xl font-semibold text-white">Map Settings</h2>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label for="activity_type" class="block text-sm font-medium text-white mb-2">Activity Type</label>
+              <select 
+                id="activity_type" 
+                name="activity_type" 
+                data-map-target="activityType"
+                data-action="change->map#updateMap"
+                class="w-full px-4 py-2 bg-shadow-grey-700 border border-shadow-grey-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cobalt-blue-500"
+              >
+                <option value="all" <%= 'selected' unless params[:activity_type].present? && params[:activity_type] != 'all' %>>All Activities</option>
+                <% @activity_types.each do |activity_type| %>
+                  <option value="<%= activity_type %>" <%= 'selected' if params[:activity_type] == activity_type %>><%= activity_type.humanize %></option>
+                <% end %>
+              </select>
+            </div>
+            
+            <div>
+              <label for="start_date" class="block text-sm font-medium text-white mb-2">Start Date</label>
+              <input 
+                type="date" 
+                id="start_date" 
+                name="start_date" 
+                value="<%= @start_date %>"
+                data-map-target="startDate"
+                data-action="change->map#updateMap"
+                class="w-full px-4 py-2 bg-shadow-grey-700 border border-shadow-grey-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cobalt-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label for="end_date" class="block text-sm font-medium text-white mb-2">End Date</label>
+              <input 
+                type="date" 
+                id="end_date" 
+                name="end_date" 
+                value="<%= @end_date %>"
+                data-map-target="endDate"
+                data-action="change->map#updateMap"
+                class="w-full px-4 py-2 bg-shadow-grey-700 border border-shadow-grey-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cobalt-blue-500"
+              />
+            </div>
+            
+            <div>
+              <button 
+                type="button"
+                data-action="click->map#updateMap"
+                class="w-full px-6 py-2 bg-cobalt-blue-500 hover:bg-cobalt-blue-600 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                Update Map
+              </button>
+            </div>
+          </div>
+          
+          <div class="mt-4 pt-4 border-t border-shadow-grey-600">
+            <div id="map-info" class="text-sm text-shadow-grey-300">
+              Loading trackpoints...
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="mb-4">
-        <div id="map-info" class="text-sm text-shadow-grey-300">
-          Loading trackpoints...
-        </div>
-      </div>
-      
-      <div id="map" data-map-target="mapContainer"></div>
     </div>
   </div>
 </div>
