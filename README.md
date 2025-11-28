@@ -284,6 +284,14 @@ config/
 - **Leaflet**: Interactive maps
 - **Leaflet.heat**: Heatmap visualization
 
+## Documentation
+
+Comprehensive documentation is available in the [`docs/`](./docs/) directory:
+
+- **[Authentication Mechanisms](./docs/authentication.md)**: Detailed guide to the authentication system, including JWT token-based API authentication and Devise-based web authentication
+- **[API Endpoints](./docs/api-endpoints.md)**: Complete reference for all API endpoints, request/response formats, and usage examples
+- **[Activity Upload Services](./docs/activity-upload-services.md)**: Documentation for the activity file parsing service, supported file formats (GPX, FIT), and upload workflows
+
 ## Troubleshooting
 
 ### PostGIS Extension Error
