@@ -7,7 +7,7 @@
       
       <div class="flex">
         <!-- Left side: Activity info -->
-        <div class="flex-1 p-6 min-h-[200px]">
+        <div class="flex-2 p-6 min-h-[200px]">
           <%= link_to activity_path(activity), class: "group" do %>
             <!-- Header with icon and type -->
             <div class="flex items-start justify-between mb-4">
@@ -117,11 +117,11 @@
 
         <!-- Right side: Map -->
         <% if trackpoints.any? %>
-          <div class="w-80 flex-shrink-0 border-l border-shadow-grey-700">
+          <div class="flex-1 border-l border-shadow-grey-700">
             <div 
               id="activity-map-<%= activity.id %>" 
               class="w-full"
-              style="height: 200px;"
+              style="height: 100%;"
               data-controller="static-activity-map"
               data-static-activity-map-trackpoints-value="<%= trackpoints.map { |tp| [tp.latitude, tp.longitude] }.to_json %>"
             ></div>
