@@ -566,18 +566,77 @@ If builds are slow or fail:
 2. **Build during off-peak hours**
 3. **Consider building on a more powerful machine and transferring the image**
 
+### Exec Format Error (Architecture Mismatch)
+
+If you see an error like:
+```
+exec /usr/local/bin/docker-entrypoint.sh: exec format error
+```
+
+This means Docker is trying to run an image built for a different architecture (usually x86_64) on your ARM-based Raspberry Pi.
+
+**Solution:**
+
+1. **The docker-compose.prod.yml file already includes `platform: linux/arm64`** for both services. Make sure you're using the latest version.
+
+2. **Pull the correct ARM image explicitly**:
+   ```bash
+   docker pull --platform linux/arm64 postgis/postgis:16-3.4
+   ```
+
+3. **If the postgis/postgis image doesn't support ARM**, you can use an alternative:
+   
+   Update `docker-compose.prod.yml` to use a different PostGIS image:
+   ```yaml
+   db:
+     image: kartoza/postgis:16-3.4  # Alternative that supports ARM
+     platform: linux/arm64
+   ```
+   
+   Or build PostgreSQL with PostGIS manually:
+   ```yaml
+   db:
+     image: postgres:16
+     platform: linux/arm64
+     environment:
+       POSTGRES_USER: training_server
+       POSTGRES_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
+       POSTGRES_DB: training_server_production
+     volumes:
+       - postgres_data_prod:/var/lib/postgresql/data
+       - ./init-postgis.sh:/docker-entrypoint-initdb.d/init-postgis.sh
+   ```
+   
+   Then create `init-postgis.sh`:
+   ```bash
+   #!/bin/bash
+   set -e
+   psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+       CREATE EXTENSION IF NOT EXISTS postgis;
+   EOSQL
+   ```
+
+4. **Verify your Raspberry Pi architecture**:
+   ```bash
+   uname -m
+   # Should show: aarch64 (for 64-bit) or armv7l (for 32-bit)
+   
+   # For 32-bit Raspberry Pi, use:
+   platform: linux/arm/v7
+   ```
+
 ### PostGIS Extension Errors
 
 If you see PostGIS-related errors:
 
 1. **Verify PostGIS is available in the database**:
    ```bash
-   docker-compose exec db psql -U training_server -d training_server_production -c "SELECT PostGIS_version();"
+   docker-compose -f docker-compose.prod.yml exec db psql -U training_server -d training_server_production -c "SELECT PostGIS_version();"
    ```
 
 2. **Manually enable PostGIS if needed**:
    ```bash
-   docker-compose exec db psql -U training_server -d training_server_production -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+   docker-compose -f docker-compose.prod.yml exec db psql -U training_server -d training_server_production -c "CREATE EXTENSION IF NOT EXISTS postgis;"
    ```
 
 ## Security Considerations
