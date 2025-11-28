@@ -3,19 +3,25 @@ import { Controller } from "@hotwired/stimulus"
 // Leaflet will be loaded as a global script, accessed via window.L
 
 export default class extends Controller {
-  static targets = ["mapContainer", "startDate", "endDate"]
+  static targets = ["mapContainer", "startDate", "endDate", "activityType"]
   
   connect() {
     this.map = null
     this.heatLayer = null
+    this.boundsUpdateTimeout = null
+    this.initialLoad = true
     // Wait for Leaflet to be available before initializing
     this.waitForLeaflet().then(() => {
       this.initializeMap()
       this.loadTrackpoints()
+      this.setupMapEventListeners()
     })
   }
   
   disconnect() {
+    if (this.boundsUpdateTimeout) {
+      clearTimeout(this.boundsUpdateTimeout)
+    }
     if (this.map) {
       this.map.remove()
     }
@@ -41,15 +47,67 @@ export default class extends Controller {
     }).addTo(this.map)
   }
   
+  setupMapEventListeners() {
+    // Debounce map move/zoom events to avoid too many API calls
+    this.map.on('moveend', () => {
+      this.debouncedUpdateMap()
+    })
+    
+    this.map.on('zoomend', () => {
+      this.debouncedUpdateMap()
+    })
+  }
+  
+  debouncedUpdateMap() {
+    // Clear existing timeout
+    if (this.boundsUpdateTimeout) {
+      clearTimeout(this.boundsUpdateTimeout)
+    }
+    
+    // Set new timeout - wait 300ms after user stops moving/zooming
+    this.boundsUpdateTimeout = setTimeout(() => {
+      this.loadTrackpoints()
+    }, 300)
+  }
+  
   async loadTrackpoints() {
     const startDate = this.startDateTarget.value
     const endDate = this.endDateTarget.value
+    const activityType = this.activityTypeTarget.value || 'all'
+    
+    // Get current map bounds if map is initialized and this is not the initial load
+    // On initial load, don't filter by bounds so we can fit to all data
+    let bounds = null
+    if (this.map && !this.initialLoad) {
+      const mapBounds = this.map.getBounds()
+      bounds = {
+        north: mapBounds.getNorth(),
+        south: mapBounds.getSouth(),
+        east: mapBounds.getEast(),
+        west: mapBounds.getWest()
+      }
+    }
     
     // Wait for heat plugin to be available
     await this.waitForHeatPlugin()
     
     try {
-      const response = await fetch(`/maps/trackpoints?start_date=${startDate}&end_date=${endDate}`, {
+      const url = new URL('/maps/trackpoints', window.location.origin)
+      url.searchParams.set('start_date', startDate)
+      url.searchParams.set('end_date', endDate)
+      if (activityType && activityType !== 'all') {
+        url.searchParams.set('activity_type', activityType)
+      }
+      
+      // Add map bounds to filter by visible area
+      if (bounds) {
+        url.searchParams.set('north', bounds.north)
+        url.searchParams.set('south', bounds.south)
+        url.searchParams.set('east', bounds.east)
+        url.searchParams.set('west', bounds.west)
+      }
+      
+      const response = await fetch(url.toString(), {
         headers: {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest'
@@ -82,8 +140,8 @@ export default class extends Controller {
         }
         
         this.heatLayer = L.heatLayer(data.trackpoints, {
-          radius: 10,
-          blur: 10,
+          radius: 20,
+          blur: 15,
           maxZoom: 17,
           max: 1.0,
           gradient: {
@@ -95,16 +153,26 @@ export default class extends Controller {
           }
         }).addTo(this.map)
         
-        // Fit map to bounds of all points
-        const bounds = data.trackpoints.map(tp => [tp[0], tp[1]])
-        if (bounds.length > 0) {
-          this.map.fitBounds(bounds, { padding: [50, 50] })
+        // Only fit bounds on initial load
+        // Don't auto-fit on subsequent loads to preserve user's zoom/pan
+        if (this.initialLoad && data.trackpoints.length > 0) {
+          const pointBounds = data.trackpoints.map(tp => [tp[0], tp[1]])
+          if (pointBounds.length > 0) {
+            this.map.fitBounds(pointBounds, { padding: [50, 50] })
+          }
+          this.initialLoad = false
         }
         
         // Update info
         const infoElement = document.getElementById('map-info')
         if (infoElement) {
-          infoElement.textContent = `Showing ${data.count.toLocaleString()} trackpoints from ${new Date(data.date_range.start).toLocaleDateString()} to ${new Date(data.date_range.end).toLocaleDateString()}`
+          const activityType = this.activityTypeTarget.value || 'all'
+          const activityTypeText = activityType !== 'all' ? ` (${activityType})` : ''
+          const sampledText = data.sampled_count && data.sampled_count < data.count 
+            ? ` (showing ${data.sampled_count.toLocaleString()} sampled points)` 
+            : ''
+          const boundsText = bounds ? ' in visible area' : ''
+          infoElement.textContent = `Showing ${data.count.toLocaleString()} trackpoints${activityTypeText}${sampledText}${boundsText} from ${new Date(data.date_range.start).toLocaleDateString()} to ${new Date(data.date_range.end).toLocaleDateString()}`
         }
       } else {
         // Update info for no data
@@ -124,6 +192,13 @@ export default class extends Controller {
   }
   
   updateMap() {
+    // When user manually updates filters, treat it like initial load
+    // so we fit to bounds of the new filtered data
+    this.initialLoad = true
+    // Clear any pending bounds updates
+    if (this.boundsUpdateTimeout) {
+      clearTimeout(this.boundsUpdateTimeout)
+    }
     this.loadTrackpoints()
   }
   
