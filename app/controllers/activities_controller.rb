@@ -10,7 +10,7 @@ class ActivitiesController < ApplicationController
 
   def show
     @track = @activity.track
-    @trackpoints = @track&.trackpoints&.order(:timestamp) || []
+    @trackpoints = @track&.trackpoints&.where.not(latitude: nil, longitude: nil)&.order(:timestamp) || []
   end
 
   def new

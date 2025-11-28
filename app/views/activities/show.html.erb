@@ -1,3 +1,8 @@
+<% content_for :head do %>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<% end %>
+
 <div class="min-h-screen">
   <div class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
     <div class="px-4 sm:px-0">
@@ -152,6 +157,29 @@
                 </dl>
               </div>
             </div>
+
+            <!-- Route Map -->
+            <% if @trackpoints.any? %>
+              <div class="bg-shadow-grey-800 rounded-xl shadow-lg border border-shadow-grey-100 overflow-hidden">
+                <div class="px-6 py-5 bg-gradient-to-r from-shadow-grey-700 to-shadow-grey-800 border-b border-shadow-grey-200">
+                  <h2 class="text-xl font-semibold text-white flex items-center">
+                    <svg class="mr-2 h-5 w-5 text-rich-cerulean-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    Route Map
+                  </h2>
+                </div>
+                <div class="p-6">
+                  <div 
+                    id="activity-map" 
+                    class="w-full rounded-lg overflow-hidden border border-shadow-grey-700"
+                    style="height: 500px;"
+                    data-controller="activity-map"
+                    data-activity-map-trackpoints-value="<%= @trackpoints.map { |tp| [tp.latitude, tp.longitude] }.to_json %>"
+                  ></div>
+                </div>
+              </div>
+            <% end %>
           <% end %>
         </div>
 
