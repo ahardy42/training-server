@@ -1,4 +1,4 @@
-<% trackpoints = activity.track&.trackpoints&.where.not(latitude: nil, longitude: nil)&.order(:timestamp) || [] %>
+<% trackpoints = activity.track ? activity.track.trackpoints.where.not(latitude: nil, longitude: nil).order(:timestamp) : [] %>
 <div class="relative bg-shadow-grey-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-shadow-grey-700 hover:border-cobalt-blue-500">
   <!-- Gradient accent bar -->
   <div class="absolute top-0 left-0 right-0 h-1 bg-cobalt-blue-500 z-10"></div>

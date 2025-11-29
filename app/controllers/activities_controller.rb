@@ -165,7 +165,9 @@ class ActivitiesController < ApplicationController
       # Enqueue the background job
       BulkActivityUploadJob.perform_later(zip_file_path, current_user.id)
       
+      # Redirect back to activities page with success message
       redirect_to activities_path, notice: "Bulk upload started. Your activities will be processed in the background."
+      return
     rescue StandardError => e
       Rails.logger.error "Bulk upload error: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
