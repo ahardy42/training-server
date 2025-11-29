@@ -13,6 +13,11 @@ class BulkActivityUploadJob < ApplicationJob
     require 'fileutils'
 
     user = User.find(user_id)
+    cache_key = "bulk_upload_job:#{user_id}"
+    
+    # Set flag to indicate job is running
+    Rails.cache.write(cache_key, true, expires_in: 1.hour)
+    
     results = {
       success: 0,
       failed: 0,
@@ -172,6 +177,8 @@ class BulkActivityUploadJob < ApplicationJob
       FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
       # Clean up zip file
       File.delete(zip_file_path) if File.exist?(zip_file_path)
+      # Clear the job flag
+      Rails.cache.delete(cache_key)
     end
   end
 end

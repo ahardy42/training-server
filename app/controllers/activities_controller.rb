@@ -11,9 +11,14 @@ class ActivitiesController < ApplicationController
       .page(params[:page])
       .per(10)
     
+    # Check if bulk upload job is running
+    cache_key = "bulk_upload_job:#{current_user.id}"
+    @bulk_upload_in_progress = Rails.cache.exist?(cache_key)
+    
     respond_to do |format|
       format.html
       format.turbo_stream
+      format.json { render json: { bulk_upload_in_progress: @bulk_upload_in_progress } }
     end
   end
 
@@ -132,6 +137,13 @@ class ActivitiesController < ApplicationController
       
       unless zip_file
         redirect_to activities_path, alert: "No file uploaded."
+        return
+      end
+      
+      # Check if a bulk upload job is already running for this user
+      cache_key = "bulk_upload_job:#{current_user.id}"
+      if Rails.cache.exist?(cache_key)
+        redirect_to activities_path, alert: "A bulk upload is already in progress. Please wait for it to complete."
         return
       end
       
