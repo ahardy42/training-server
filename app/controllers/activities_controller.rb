@@ -6,7 +6,7 @@ class ActivitiesController < ApplicationController
 
   def index
     @activities = current_user.activities
-      .includes(track: :trackpoints)
+      .includes(:track)
       .order(date: :desc, created_at: :desc)
       .page(params[:page])
       .per(10)

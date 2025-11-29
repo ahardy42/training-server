@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Static map controller - no zoom, no pan, just displays the route
 export default class extends Controller {
   static values = {
-    trackpoints: Array
+    polyline: String
   }
   
   connect() {
@@ -22,7 +22,14 @@ export default class extends Controller {
   
   initializeMap() {
     const L = window.L
-    const trackpoints = this.trackpointsValue
+    const encodedPolyline = this.polylineValue
+    
+    if (!encodedPolyline || encodedPolyline.length === 0) {
+      return
+    }
+    
+    // Decode the polyline to get lat/lng points
+    const trackpoints = this.decodePolyline(encodedPolyline)
     
     if (!trackpoints || trackpoints.length === 0) {
       return
@@ -132,6 +139,51 @@ export default class extends Controller {
         }
       }, 100)
     })
+  }
+  
+  // Decode Google polyline format (used by polylines gem)
+  // Algorithm: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+  decodePolyline(encoded) {
+    if (!encoded) return []
+    
+    const points = []
+    let index = 0
+    const len = encoded.length
+    let lat = 0
+    let lng = 0
+    
+    while (index < len) {
+      let b
+      let shift = 0
+      let result = 0
+      
+      // Decode latitude
+      do {
+        b = encoded.charCodeAt(index++) - 63
+        result |= (b & 0x1f) << shift
+        shift += 5
+      } while (b >= 0x20)
+      
+      const dlat = ((result & 1) !== 0) ? ~(result >> 1) : (result >> 1)
+      lat += dlat
+      
+      shift = 0
+      result = 0
+      
+      // Decode longitude
+      do {
+        b = encoded.charCodeAt(index++) - 63
+        result |= (b & 0x1f) << shift
+        shift += 5
+      } while (b >= 0x20)
+      
+      const dlng = ((result & 1) !== 0) ? ~(result >> 1) : (result >> 1)
+      lng += dlng
+      
+      points.push([lat * 1e-5, lng * 1e-5])
+    }
+    
+    return points
   }
 }
 
