@@ -128,7 +128,6 @@ class BulkActivityUploadJob < ApplicationJob
               
               activity = user.activities.create!(
                 activity_type_id: activity_type_obj&.id,
-                activity_type: parsed_data[:activity_type], # Keep string for backward compatibility
                 title: parsed_data[:title],
                 date: parsed_data[:date],
                 description: parsed_data[:description],

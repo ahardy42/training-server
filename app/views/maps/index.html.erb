@@ -104,7 +104,7 @@
               >
                 <option value="all" <%= 'selected' unless params[:activity_type].present? && params[:activity_type] != 'all' %>>All Activities</option>
                 <% @activity_types.each do |activity_type| %>
-                  <option value="<%= activity_type %>" <%= 'selected' if params[:activity_type] == activity_type %>><%= activity_type.humanize %></option>
+                  <option value="<%= activity_type.key %>" <%= 'selected' if params[:activity_type] == activity_type.key %>><%= activity_type.name %></option>
                 <% end %>
               </select>
             </div>

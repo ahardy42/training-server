@@ -20,13 +20,14 @@ class MapsController < ApplicationController
       @end_date = default_end_date
     end
 
-    # Get unique activity types for the user
+    # Get unique activity types for the user (using association)
     @activity_types = current_user.activities
-      .where.not(activity_type: [nil, ''])
+      .joins(:activity_type)
+      .includes(:activity_type)
       .distinct
-      .pluck(:activity_type)
+      .map { |a| a.activity_type }
       .compact
-      .sort
+      .sort_by(&:name)
   end
 
   def trackpoints
@@ -53,9 +54,12 @@ class MapsController < ApplicationController
       .where(timestamp: start_date.beginning_of_day..end_date.end_of_day)
       .where.not(location: nil) # Use PostGIS geometry column instead of checking lat/lng separately
 
-    # Filter by activity type if provided
+    # Filter by activity type if provided (using activity_type_id via key)
     if params[:activity_type].present? && params[:activity_type] != 'all'
-      base_query = base_query.where(activities: { activity_type: params[:activity_type] })
+      activity_type = ActivityType.find_by(key: params[:activity_type])
+      if activity_type
+        base_query = base_query.where(activities: { activity_type_id: activity_type.id })
+      end
     end
 
     # Filter by map bounds if provided (for zoomed/zoomed views)
@@ -119,8 +123,12 @@ class MapsController < ApplicationController
       # Use raw SQL with window function for efficient sampling
       # This avoids loading all records into memory
       activity_type_filter = if params[:activity_type].present? && params[:activity_type] != 'all'
-        sanitized_type = ActiveRecord::Base.connection.quote(params[:activity_type])
-        "AND a.activity_type = #{sanitized_type}"
+        activity_type = ActivityType.find_by(key: params[:activity_type])
+        if activity_type
+          "AND a.activity_type_id = #{activity_type.id}"
+        else
+          ""
+        end
       else
         ""
       end

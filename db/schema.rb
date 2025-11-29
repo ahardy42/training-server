@@ -10,14 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_29_165139) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_29_171223) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
 
   create_table "activities", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.string "activity_type"
     t.date "date"
     t.string "title"
     t.text "description"
@@ -29,10 +28,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_165139) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "activity_type_id"
-    t.index ["activity_type"], name: "index_activities_on_activity_type"
     t.index ["activity_type_id"], name: "index_activities_on_activity_type_id"
     t.index ["date"], name: "index_activities_on_date"
-    t.index ["user_id", "activity_type"], name: "index_activities_on_user_id_and_activity_type"
     t.index ["user_id", "date"], name: "index_activities_on_user_id_and_date"
     t.index ["user_id"], name: "index_activities_on_user_id"
   end

@@ -1,13 +1,17 @@
 # frozen_string_literal: true
 
 # Background job to sync all activities with activity_type_id
-# This job processes activities in batches and sets their activity_type_id
-# based on the normalized activity_type string column
+# This job processes activities that don't have an activity_type_id
+# Note: This job is mainly for historical data migration. New activities should
+# always have activity_type_id set during creation.
 class SyncActivitiesActivityTypesJob < ApplicationJob
   queue_as :default
 
   # Sync all activities with activity_type_id
   # Processes activities in batches for performance
+  # Note: This will only process activities without activity_type_id
+  # Since the activity_type string column has been removed, this job
+  # will only work for activities that somehow don't have activity_type_id set
   def perform
     results = {
       processed: 0,
@@ -16,39 +20,17 @@ class SyncActivitiesActivityTypesJob < ApplicationJob
       errors: []
     }
 
-    # Process activities in batches
-    # Use read_attribute to explicitly reference the column, not the association
-    Activity.where.not(Activity.arel_table[:activity_type].eq(nil))
-            .where(activity_type_id: nil)
+    # Process activities that don't have activity_type_id
+    # Since the string column is gone, we can only process activities
+    # that somehow don't have activity_type_id set (shouldn't happen in normal operation)
+    Activity.where(activity_type_id: nil)
             .find_in_batches(batch_size: 1000) do |batch|
       batch.each do |activity|
         begin
-          # Get the activity_type string from the column, not the association
-          activity_type_string = activity.read_attribute(:activity_type)
-          
-          if activity_type_string.blank?
-            results[:skipped] += 1
-            next
-          end
-          
-          # Normalize the activity_type string
-          normalized_key = ActivityType.normalize_key(activity_type_string)
-          
-          if normalized_key.blank?
-            results[:skipped] += 1
-            next
-          end
-
-          # Find or create the ActivityType
-          activity_type = ActivityType.find_or_create_by_key(activity_type_string)
-          
-          if activity_type
-            activity.update_column(:activity_type_id, activity_type.id)
-            results[:updated] += 1
-          else
-            results[:skipped] += 1
-            results[:errors] << "Activity #{activity.id}: Could not find or create activity type for '#{activity_type_string}'"
-          end
+          # Without the string column, we can't determine what activity type this should be
+          # Skip these activities and log an error
+          results[:skipped] += 1
+          results[:errors] << "Activity #{activity.id}: Cannot determine activity type (string column removed)"
           
           results[:processed] += 1
         rescue StandardError => e

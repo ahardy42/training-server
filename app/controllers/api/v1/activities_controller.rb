@@ -214,16 +214,9 @@ module Api
       end
       
       def serialize_activity(activity, include_trackpoints: false)
-        # Use association if available, fall back to string column
-        activity_type_value = if activity.activity_type.present?
-                                activity.activity_type.key
-                              else
-                                activity.read_attribute(:activity_type)
-                              end
-        
         data = {
           id: activity.id,
-          activity_type: activity_type_value,
+          activity_type: activity.activity_type&.key,
           date: activity.date,
           title: activity.title,
           description: activity.description,

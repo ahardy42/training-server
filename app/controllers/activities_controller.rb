@@ -60,7 +60,6 @@ class ActivitiesController < ApplicationController
     if activity_type_string.present?
       activity_type_obj = ActivityType.find_or_create_by_key(activity_type_string)
       params_hash[:activity_type_id] = activity_type_obj&.id
-      params_hash[:activity_type] = activity_type_string # Keep string for backward compatibility
     end
     
     @activity = current_user.activities.build(params_hash)
@@ -117,7 +116,6 @@ class ActivitiesController < ApplicationController
       # Create activity
       @activity = current_user.activities.create!(
         activity_type_id: activity_type_obj&.id,
-        activity_type: parsed_data[:activity_type], # Keep string for backward compatibility during migration
         title: parsed_data[:title],
         date: parsed_data[:date],
         description: parsed_data[:description],
