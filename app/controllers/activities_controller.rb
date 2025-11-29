@@ -55,6 +55,8 @@ class ActivitiesController < ApplicationController
   def create_manual
     @activity = current_user.activities.build(activity_params)
 
+    # Note: Manual entries don't have start_time, so we skip the duplicate check
+    # The duplicate check requires start_time to compare activities
     if @activity.save
       redirect_to @activity, notice: "Activity was successfully created."
     else
@@ -76,6 +78,24 @@ class ActivitiesController < ApplicationController
     unless parsed_data
       @activity = current_user.activities.build
       flash.now[:alert] = "Failed to parse activity file."
+      render :new, status: :unprocessable_entity
+      return
+    end
+
+    # Check for duplicates before creating
+    trackpoint_count = parsed_data[:trackpoints]&.count || 0
+    duplicate = Activity.find_duplicate(
+      user: current_user,
+      date: parsed_data[:date],
+      activity_type: parsed_data[:activity_type],
+      start_time: parsed_data[:start_time],
+      end_time: parsed_data[:end_time],
+      trackpoint_count: trackpoint_count
+    )
+
+    if duplicate
+      @activity = current_user.activities.build
+      flash.now[:alert] = "A duplicate activity already exists for this date and time. Please check your activities list."
       render :new, status: :unprocessable_entity
       return
     end

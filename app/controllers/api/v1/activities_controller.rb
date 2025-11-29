@@ -40,8 +40,33 @@ module Api
       
       # POST /api/v1/activities
       def create
+        activity_params_data = activity_params.except(:track, :trackpoints)
+        track_data_params = track_data
+        trackpoints_data_params = trackpoints_data
+        
+        # Check for duplicates before creating
+        if track_data_params.present? && track_data_params[:start_date].present?
+          trackpoint_count = trackpoints_data_params.is_a?(Array) ? trackpoints_data_params.count : 0
+          start_time = parse_datetime(track_data_params[:start_date])
+          end_time = parse_datetime(track_data_params[:end_date])
+          
+          duplicate = Activity.find_duplicate(
+            user: current_user,
+            date: activity_params_data[:date],
+            activity_type: activity_params_data[:activity_type],
+            start_time: start_time,
+            end_time: end_time,
+            trackpoint_count: trackpoint_count
+          )
+          
+          if duplicate
+            render_json_error("A duplicate activity already exists for this date and time", status: :unprocessable_entity)
+            return
+          end
+        end
+        
         ActiveRecord::Base.transaction do
-          @activity = current_user.activities.build(activity_params.except(:track, :trackpoints))
+          @activity = current_user.activities.build(activity_params_data)
           
           unless @activity.save
             render_json_validation_errors(@activity)
@@ -49,8 +74,8 @@ module Api
           end
           
           # Handle track and trackpoints if provided
-          if track_data.present?
-            create_or_update_track(@activity, track_data)
+          if track_data_params.present?
+            create_or_update_track(@activity, track_data_params)
           end
           
           render json: serialize_activity(@activity, include_trackpoints: true), 

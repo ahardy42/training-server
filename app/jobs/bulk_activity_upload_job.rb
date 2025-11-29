@@ -104,6 +104,23 @@ class BulkActivityUploadJob < ApplicationJob
               next
             end
 
+            # Check for duplicates before creating
+            trackpoint_count = parsed_data[:trackpoints]&.count || 0
+            duplicate = Activity.find_duplicate(
+              user: user,
+              date: parsed_data[:date],
+              activity_type: parsed_data[:activity_type],
+              start_time: parsed_data[:start_time],
+              end_time: parsed_data[:end_time],
+              trackpoint_count: trackpoint_count
+            )
+
+            if duplicate
+              results[:skipped] += 1
+              results[:errors] << "#{File.basename(entry.name)}: Duplicate activity already exists for this date and time"
+              next
+            end
+
             # Create activity
             ActiveRecord::Base.transaction do
               activity = user.activities.create!(
