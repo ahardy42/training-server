@@ -48,11 +48,11 @@ class MapsController < ApplicationController
       .where(timestamp: start_date.beginning_of_day..end_date.end_of_day)
       .where.not(location: nil) # Use PostGIS geometry column instead of checking lat/lng separately
 
-    # Filter by activity type if provided (using activity_type_id via key)
+    # Filter by activity type if provided
     if params[:activity_type].present? && params[:activity_type] != 'all'
       activity_type = ActivityType.find_by(key: params[:activity_type])
       if activity_type
-        base_query = base_query.where(activities: { activity_type_id: activity_type.id })
+        base_query = base_query.where(activity_type: activity_type)
       end
     end
 
