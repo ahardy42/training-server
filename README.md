@@ -21,6 +21,7 @@ Before you begin, ensure you have the following installed:
 - **Ruby** (see `.ruby-version` for the required version)
 - **PostgreSQL** 9.3 or higher
 - **PostGIS** extension for PostgreSQL (required for spatial queries)
+- **Redis** (required for Sidekiq background jobs)
 - **Node.js** (for JavaScript dependencies)
 - **Bundler** gem
 
@@ -46,6 +47,10 @@ brew install postgis
 
 # Install Node.js
 brew install node
+
+# Install Redis
+brew install redis
+brew services start redis
 ```
 
 #### Ubuntu/Debian
@@ -67,6 +72,11 @@ sudo apt-get install -y postgresql-postgis
 # Install Node.js
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
+
+# Install Redis
+sudo apt-get install -y redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
 ```
 
 #### Windows
@@ -74,7 +84,8 @@ sudo apt-get install -y nodejs
 1. Install Ruby using [RubyInstaller](https://rubyinstaller.org/)
 2. Install PostgreSQL from [postgresql.org](https://www.postgresql.org/download/windows/)
 3. Install PostGIS from [PostGIS Windows Installer](https://postgis.net/windows_downloads/)
-4. Install Node.js from [nodejs.org](https://nodejs.org/)
+4. Install Redis from [Redis for Windows](https://github.com/microsoftarchive/redis/releases) or use WSL
+5. Install Node.js from [nodejs.org](https://nodejs.org/)
 
 ## Installation
 
@@ -144,7 +155,19 @@ bin/rails log:clear tmp:clear
 bin/dev
 ```
 
-This starts the Rails server and asset pipeline. The application will be available at `http://localhost:3000`.
+This starts the Rails server, asset pipeline, Redis, and Sidekiq. The application will be available at `http://localhost:3000`.
+
+**Note**: Make sure Redis is running before starting the development server. If you're not using `bin/dev`, you'll need to start Redis separately:
+```bash
+# macOS
+brew services start redis
+
+# Linux
+sudo systemctl start redis-server
+
+# Or manually
+redis-server
+```
 
 ### Manual Start
 

@@ -1,2 +1,4 @@
 web: bundle exec rails server
 css: bundle exec rails tailwindcss:watch
+redis: redis-server
+sidekiq: bundle exec sidekiq

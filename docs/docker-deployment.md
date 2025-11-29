@@ -44,7 +44,53 @@ The application automatically creates the database, runs migrations, and starts 
 - Raspberry Pi OS (or compatible Linux distribution)
 - Docker installed
 - Docker Compose plugin installed
+- Redis installed and running (required for Sidekiq background jobs)
 - At least 2GB RAM recommended (4GB+ for better performance)
+
+### Redis Installation
+
+Redis is required for Sidekiq background job processing. Install Redis on your system:
+
+**On Raspberry Pi / Ubuntu / Debian:**
+```bash
+sudo apt-get update
+sudo apt-get install redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+**On macOS:**
+```bash
+brew install redis
+brew services start redis
+```
+
+**Verify Redis is running:**
+```bash
+redis-cli ping
+# Should return: PONG
+```
+
+**For Docker deployments**, you'll need to add a Redis service to your `docker-compose.prod.yml`:
+```yaml
+redis:
+  image: redis:7-alpine
+  container_name: training_server_redis
+  ports:
+    - "6379:6379"
+  volumes:
+    - redis_data:/data
+  networks:
+    - training_server_network
+  restart: unless-stopped
+```
+
+And add the Redis URL to your web service environment:
+```yaml
+REDIS_URL: redis://redis:6379/0
+```
+
+Don't forget to add `redis_data` to your volumes section.
 
 ## Local Development with Docker
 
@@ -234,6 +280,9 @@ docker-compose -f docker-compose.prod.yml ps
 - `POSTGRES_PASSWORD`: PostgreSQL password for development (defaults to `training_server_dev`)
 - `RAILS_LOG_LEVEL`: Log level (default: `info`)
 - `RAILS_MAX_THREADS`: Database connection pool size (default: 5)
+- `REDIS_URL`: Redis connection URL (defaults to `redis://localhost:6379/0`)
+
+**Note**: If using Docker, set `REDIS_URL=redis://redis:6379/0` to connect to the Redis container.
 
 ## Troubleshooting
 
@@ -283,6 +332,28 @@ docker-compose -f docker-compose.prod.yml logs db
 # Verify environment variables
 docker-compose -f docker-compose.prod.yml exec web env | grep POSTGRES
 ```
+
+### Redis Connection Issues
+
+If background jobs aren't processing:
+
+```bash
+# Verify Redis is running
+redis-cli ping
+# Should return: PONG
+
+# Check Redis logs (if using Docker)
+docker-compose -f docker-compose.prod.yml logs redis
+
+# Verify Sidekiq can connect
+docker-compose -f docker-compose.prod.yml exec web bundle exec sidekiq
+# Or check Sidekiq web UI at http://your-server/sidekiq
+```
+
+**For Docker deployments**, ensure:
+1. Redis service is added to `docker-compose.prod.yml`
+2. `REDIS_URL` environment variable is set correctly
+3. Web service depends on Redis service
 
 ### Port Already in Use
 
