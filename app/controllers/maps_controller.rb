@@ -21,13 +21,7 @@ class MapsController < ApplicationController
     end
 
     # Get unique activity types for the user (using association)
-    @activity_types = current_user.activities
-      .joins(:activity_type)
-      .includes(:activity_type)
-      .distinct
-      .map { |a| a.activity_type }
-      .compact
-      .sort_by(&:name)
+    @activity_types = ActivityType.all
   end
 
   def trackpoints
