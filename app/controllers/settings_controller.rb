@@ -18,7 +18,7 @@ class SettingsController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:units, :name, :date_of_birth, :height, :weight)
+    params.require(:user).permit(:units, :name, :date_of_birth, :height, :weight, :ftp, :lt_hr, :max_hr)
   end
 end
 

@@ -10,4 +10,7 @@ class User < ApplicationRecord
   validates :height, numericality: { greater_than: 0, allow_nil: true }
   validates :weight, numericality: { greater_than: 0, allow_nil: true }
   validates :date_of_birth, presence: false
+  validates :ftp, numericality: { greater_than: 0, allow_nil: true, only_integer: true }
+  validates :lt_hr, numericality: { greater_than: 0, allow_nil: true, only_integer: true }
+  validates :max_hr, numericality: { greater_than: 0, allow_nil: true, only_integer: true }
 end

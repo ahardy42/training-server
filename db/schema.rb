@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_29_171223) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_29_225217) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
@@ -86,6 +86,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_171223) do
     t.decimal "height", precision: 5, scale: 2
     t.decimal "weight", precision: 5, scale: 2
     t.string "refresh_token"
+    t.integer "ftp"
+    t.integer "lt_hr"
+    t.integer "max_hr"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["refresh_token"], name: "index_users_on_refresh_token", where: "(refresh_token IS NOT NULL)"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
