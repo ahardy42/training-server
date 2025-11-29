@@ -39,6 +39,9 @@ gem "rubyzip" # For handling zip files for bulk uploads
 # Charting library
 gem "plotly-rails-js" # Plotly.js wrapper for Rails
 
+# Polyline encoding for map tracks
+gem "polylines"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

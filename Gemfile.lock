@@ -210,6 +210,7 @@ GEM
     pg (1.6.2-arm64-darwin)
     pg (1.6.2-x86_64-linux)
     plotly-rails-js (1.39.2)
+    polylines (0.4.0)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -411,6 +412,7 @@ DEPENDENCIES
   kaminari
   pg (~> 1.1)
   plotly-rails-js
+  polylines
   propshaft
   puma (>= 5.0)
   rails (~> 8.0.3)
