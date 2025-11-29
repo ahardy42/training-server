@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_29_134320) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_29_164911) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
@@ -28,11 +28,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_134320) do
     t.decimal "average_hr"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "activity_type_id"
     t.index ["activity_type"], name: "index_activities_on_activity_type"
+    t.index ["activity_type_id"], name: "index_activities_on_activity_type_id"
     t.index ["date"], name: "index_activities_on_date"
     t.index ["user_id", "activity_type"], name: "index_activities_on_user_id_and_activity_type"
     t.index ["user_id", "date"], name: "index_activities_on_user_id_and_date"
     t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "activity_types", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_activity_types_on_key", unique: true
   end
 
   create_table "trackpoints", force: :cascade do |t|
@@ -47,6 +57,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_134320) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.geometry "location", limit: {:srid=>0, :type=>"geometry"}
+    t.bigint "activity_type_id"
+    t.index ["activity_type_id"], name: "index_trackpoints_on_activity_type_id"
     t.index ["location"], name: "index_trackpoints_on_location_gist", using: :gist
     t.index ["timestamp", "latitude", "longitude"], name: "index_trackpoints_on_timestamp_and_coords", where: "((latitude IS NOT NULL) AND (longitude IS NOT NULL))"
     t.index ["timestamp"], name: "index_trackpoints_on_timestamp"
@@ -82,7 +94,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_134320) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "activities", "activity_types"
   add_foreign_key "activities", "users"
+  add_foreign_key "trackpoints", "activity_types"
   add_foreign_key "trackpoints", "tracks"
   add_foreign_key "tracks", "activities"
 end

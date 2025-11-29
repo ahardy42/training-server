@@ -2,6 +2,7 @@
 
 class Activity < ApplicationRecord
   belongs_to :user
+  belongs_to :activity_type, optional: true
   has_one :track, dependent: :destroy
 
   # Check if this activity is a duplicate based on:
