@@ -35,17 +35,23 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_134320) do
     t.index ["user_id"], name: "index_activities_on_user_id"
   end
 
-  create_table "spatial_ref_sys", primary_key: "srid", id: :integer, default: nil, force: :cascade do |t|
-    t.string "auth_name", limit: 256
-    t.integer "auth_srid"
-    t.string "srtext", limit: 2048
-    t.string "proj4text", limit: 2048
-    t.check_constraint "srid > 0 AND srid <= 998999", name: "spatial_ref_sys_srid_check"
+  create_table "trackpoints", force: :cascade do |t|
+    t.bigint "track_id", null: false
+    t.datetime "timestamp"
+    t.float "latitude", limit: 24
+    t.float "longitude", limit: 24
+    t.integer "heartrate", limit: 2
+    t.integer "power"
+    t.integer "cadence", limit: 2
+    t.float "elevation", limit: 24
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.geometry "location", limit: {:srid=>0, :type=>"geometry"}
+    t.index ["location"], name: "index_trackpoints_on_location_gist", using: :gist
+    t.index ["timestamp", "latitude", "longitude"], name: "index_trackpoints_on_timestamp_and_coords", where: "((latitude IS NOT NULL) AND (longitude IS NOT NULL))"
+    t.index ["timestamp"], name: "index_trackpoints_on_timestamp"
+    t.index ["track_id"], name: "index_trackpoints_on_track_id"
   end
-
-# Could not dump table "trackpoints" because of following StandardError
-#   Unknown type 'geometry' for column 'location'
-
 
   create_table "tracks", force: :cascade do |t|
     t.bigint "activity_id", null: false
