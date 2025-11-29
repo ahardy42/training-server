@@ -138,6 +138,9 @@ class ActivitiesController < ApplicationController
         end
 
         Trackpoint.insert_all(trackpoints_to_create) if trackpoints_to_create.any?
+        
+        # Generate polyline from trackpoints
+        track.generate_polyline! if trackpoints_to_create.any?
       end
 
       redirect_to @activity, notice: "Activity was successfully created from file."

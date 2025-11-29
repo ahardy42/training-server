@@ -180,6 +180,9 @@ module Api
           end
           
           Trackpoint.insert_all(trackpoints_to_create) if trackpoints_to_create.any?
+          
+          # Generate polyline from trackpoints
+          track.generate_polyline! if trackpoints_to_create.any?
         end
         
         track
