@@ -210,6 +210,8 @@ class ActivityFileParser
       trackpoints_data = []
       session_found = false
       messages = []
+      # Store all records by timestamp to merge sensor data later
+      records_by_timestamp = {}
 
       # Create a handler object that implements the callback methods
       handler = Object.new
@@ -226,6 +228,7 @@ class ActivityFileParser
       handler.instance_variable_set(:@total_ascent, total_ascent)
       handler.instance_variable_set(:@trackpoints_data, trackpoints_data)
       handler.instance_variable_set(:@session_found, session_found)
+      handler.instance_variable_set(:@records_by_timestamp, records_by_timestamp)
       
       # Define callback methods
       def handler.on_activity(data)
@@ -338,16 +341,20 @@ class ActivityFileParser
         Rails.logger.debug "on_record called with: #{data.inspect}"
         @messages << { type: 'record', data: data }
         
+        # Extract data from FIT record message
         trackpoint_data = {}
+        timestamp = nil
         
         if data['timestamp']
-          trackpoint_data[:timestamp] = Time.at(data['timestamp'])
+          timestamp = Time.at(data['timestamp'])
+          trackpoint_data[:timestamp] = timestamp
           if !@date && @trackpoints_data.empty?
-            @date = trackpoint_data[:timestamp]
+            @date = timestamp
             Rails.logger.info "Date from first trackpoint: #{@date}"
           end
         end
         
+        # Extract GPS coordinates
         if data['position_lat']
           trackpoint_data[:latitude] = data['position_lat']
         end
@@ -356,10 +363,12 @@ class ActivityFileParser
           trackpoint_data[:longitude] = data['position_long']
         end
         
+        # Extract elevation (prefer enhanced_altitude if available)
         if data['altitude'] || data['enhanced_altitude']
           trackpoint_data[:elevation] = data['enhanced_altitude'] || data['altitude']
         end
         
+        # Extract sensor data
         if data['heart_rate']
           trackpoint_data[:heartrate] = data['heart_rate']
         end
@@ -380,8 +389,20 @@ class ActivityFileParser
           trackpoint_data[:distance] = data['distance']
         end
         
-        if trackpoint_data[:latitude] && trackpoint_data[:longitude]
-          @trackpoints_data << trackpoint_data
+        # Merge all records by timestamp
+        # FIT files often have multiple records at the same timestamp (e.g., GPS in one record, HR in another)
+        # We merge them so each timestamp has a complete record with all available data
+        if timestamp
+          if @records_by_timestamp[timestamp]
+            # Merge new data into existing record at this timestamp
+            # If both records have the same field, prefer the new value
+            @records_by_timestamp[timestamp].merge!(trackpoint_data) do |_key, old_val, new_val|
+              new_val || old_val  # Prefer new value, fall back to old if new is nil
+            end
+          else
+            # First record at this timestamp - store it
+            @records_by_timestamp[timestamp] = trackpoint_data.dup
+          end
         end
       end
       
@@ -433,8 +454,79 @@ class ActivityFileParser
         trackpoints_data = handler.instance_variable_get(:@trackpoints_data) || []
         session_found = handler.instance_variable_get(:@session_found) || false
         messages = handler.instance_variable_get(:@messages) || []
+        records_by_timestamp = handler.instance_variable_get(:@records_by_timestamp) || {}
         
-        Rails.logger.info "Parse completed. Collected #{messages.length} messages, #{trackpoints_data.length} trackpoints"
+        Rails.logger.info "Parse completed. Collected #{messages.length} messages, #{records_by_timestamp.length} unique timestamps"
+        
+        # Step 1: Build trackpoints_data from merged records that have GPS coordinates
+        # Only records with GPS are included as trackpoints (sensor-only records will be merged in step 2)
+        trackpoints_data = []
+        gps_timestamps = []
+        hr_only_records = []
+        
+        records_by_timestamp.each do |timestamp, record_data|
+          if record_data[:latitude] && record_data[:longitude]
+            # This record has GPS - include it as a trackpoint
+            trackpoints_data << record_data
+            gps_timestamps << timestamp
+          elsif record_data[:heartrate] || record_data[:power] || record_data[:cadence]
+            # This record has sensor data but no GPS - store for later merging
+            hr_only_records << { timestamp: timestamp, data: record_data }
+          end
+        end
+        
+        Rails.logger.info "Found #{trackpoints_data.length} GPS trackpoints, #{hr_only_records.length} sensor-only records to merge"
+        
+        # Step 2: Merge sensor data from records without GPS into nearest GPS trackpoints
+        # Some FIT files have HR/sensor data at slightly different timestamps than GPS
+        # We match them to the nearest GPS trackpoint within a 5-second window
+        gps_timestamps.sort!  # Sort for efficient binary search
+        
+        hr_records_merged = 0
+        
+        hr_only_records.each do |hr_record|
+          hr_timestamp = hr_record[:timestamp]
+          hr_data = hr_record[:data]
+          
+          # Find the nearest GPS trackpoint by timestamp using binary search
+          insert_idx = gps_timestamps.bsearch_index { |gps_ts| gps_ts >= hr_timestamp } || gps_timestamps.length
+          
+          # Check GPS timestamps before and after this HR timestamp
+          candidates = []
+          candidates << gps_timestamps[insert_idx - 1] if insert_idx > 0
+          candidates << gps_timestamps[insert_idx] if insert_idx < gps_timestamps.length
+          
+          # Find the closest GPS timestamp
+          nearest_gps_timestamp = candidates.min_by { |gps_ts| (hr_timestamp - gps_ts).abs } if candidates.any?
+          
+          if nearest_gps_timestamp
+            time_diff = (hr_timestamp - nearest_gps_timestamp).abs
+            
+            # Merge if within 5 seconds
+            if time_diff <= 5.0
+              # Find the corresponding GPS trackpoint
+              gps_trackpoint = trackpoints_data.find { |tp| tp[:timestamp] == nearest_gps_timestamp }
+              
+              if gps_trackpoint
+                # Merge sensor data fields (only if not already present)
+                hr_data.each do |key, value|
+                  if [:heartrate, :power, :cadence, :speed, :distance, :elevation].include?(key) && 
+                     !value.nil? && 
+                     !gps_trackpoint[key]
+                    gps_trackpoint[key] = value
+                    hr_records_merged += 1 if key == :heartrate
+                  end
+                end
+              end
+            end
+          end
+        end
+        
+        merged_hr_count = trackpoints_data.count { |tp| tp[:heartrate] }
+        Rails.logger.info "After merging: #{merged_hr_count} trackpoints have heart rate data (#{hr_records_merged} merged from nearby timestamps)"
+        
+        merged_count = trackpoints_data.count { |tp| tp[:heartrate] }
+        Rails.logger.info "After merging: #{merged_count} trackpoints have heart rate data"
         
       rescue => e
         Rails.logger.error "Error parsing FIT file: #{e.message}"
