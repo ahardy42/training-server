@@ -53,7 +53,17 @@ class ActivitiesController < ApplicationController
   end
 
   def create_manual
-    @activity = current_user.activities.build(activity_params)
+    params_hash = activity_params.to_h
+    activity_type_string = params_hash.delete(:activity_type)
+    
+    # Find or create ActivityType if activity_type string is provided
+    if activity_type_string.present?
+      activity_type_obj = ActivityType.find_or_create_by_key(activity_type_string)
+      params_hash[:activity_type_id] = activity_type_obj&.id
+      params_hash[:activity_type] = activity_type_string # Keep string for backward compatibility
+    end
+    
+    @activity = current_user.activities.build(params_hash)
 
     # Note: Manual entries don't have start_time, so we skip the duplicate check
     # The duplicate check requires start_time to compare activities
@@ -101,9 +111,13 @@ class ActivitiesController < ApplicationController
     end
 
     ActiveRecord::Base.transaction do
+      # Find or create ActivityType
+      activity_type_obj = ActivityType.find_or_create_by_key(parsed_data[:activity_type])
+      
       # Create activity
       @activity = current_user.activities.create!(
-        activity_type: parsed_data[:activity_type],
+        activity_type_id: activity_type_obj&.id,
+        activity_type: parsed_data[:activity_type], # Keep string for backward compatibility during migration
         title: parsed_data[:title],
         date: parsed_data[:date],
         description: parsed_data[:description],
@@ -125,6 +139,7 @@ class ActivitiesController < ApplicationController
         trackpoints_to_create = parsed_data[:trackpoints].map do |tp_data|
           {
             track_id: track.id,
+            activity_type_id: activity_type_obj&.id,
             timestamp: tp_data[:timestamp],
             latitude: tp_data[:latitude],
             longitude: tp_data[:longitude],

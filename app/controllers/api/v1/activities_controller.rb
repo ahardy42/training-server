@@ -66,6 +66,14 @@ module Api
         end
         
         ActiveRecord::Base.transaction do
+          # Find or create ActivityType if activity_type string is provided
+          activity_type_string = activity_params_data[:activity_type]
+          activity_type_obj = nil
+          if activity_type_string.present?
+            activity_type_obj = ActivityType.find_or_create_by_key(activity_type_string)
+            activity_params_data[:activity_type_id] = activity_type_obj&.id
+          end
+          
           @activity = current_user.activities.build(activity_params_data)
           
           unless @activity.save
@@ -75,7 +83,7 @@ module Api
           
           # Handle track and trackpoints if provided
           if track_data_params.present?
-            create_or_update_track(@activity, track_data_params)
+            create_or_update_track(@activity, track_data_params, activity_type_obj)
           end
           
           render json: serialize_activity(@activity, include_trackpoints: true), 
@@ -95,7 +103,7 @@ module Api
           
           # Handle track and trackpoints if provided
           if track_data.present?
-            create_or_update_track(@activity, track_data)
+            create_or_update_track(@activity, track_data, @activity.activity_type)
           end
           
           render json: serialize_activity(@activity, include_trackpoints: true)
@@ -144,7 +152,7 @@ module Api
         params[:activity][:trackpoints] if params[:activity].present?
       end
       
-      def create_or_update_track(activity, track_params)
+      def create_or_update_track(activity, track_params, activity_type_obj = nil)
         track = activity.track || activity.build_track
         
         track_attrs = {
@@ -158,6 +166,9 @@ module Api
           track.save!
         end
         
+        # Use activity's activity_type if not provided
+        activity_type_obj ||= activity.activity_type
+        
         # Handle trackpoints if provided
         if trackpoints_data.present? && trackpoints_data.is_a?(Array)
           # Delete existing trackpoints if we're replacing them
@@ -167,6 +178,7 @@ module Api
           trackpoints_to_create = trackpoints_data.map do |tp_data|
             {
               track_id: track.id,
+              activity_type_id: activity_type_obj&.id,
               timestamp: parse_datetime(tp_data[:timestamp]),
               latitude: tp_data[:latitude],
               longitude: tp_data[:longitude],
@@ -202,9 +214,16 @@ module Api
       end
       
       def serialize_activity(activity, include_trackpoints: false)
+        # Use association if available, fall back to string column
+        activity_type_value = if activity.activity_type.present?
+                                activity.activity_type.key
+                              else
+                                activity.read_attribute(:activity_type)
+                              end
+        
         data = {
           id: activity.id,
-          activity_type: activity.activity_type,
+          activity_type: activity_type_value,
           date: activity.date,
           title: activity.title,
           description: activity.description,

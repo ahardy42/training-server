@@ -74,6 +74,28 @@ module ApplicationHelper
     user_prefers_imperial? ? "mph" : "km/h"
   end
 
+  # Get the activity type display name, using the association if available
+  # Falls back to the string column for backward compatibility
+  def activity_type_display_name(activity)
+    if activity.activity_type.present?
+      activity.activity_type.name
+    elsif activity.read_attribute(:activity_type).present?
+      activity.read_attribute(:activity_type).humanize
+    else
+      nil
+    end
+  end
+
+  # Get the activity type key, using the association if available
+  # Falls back to the string column for backward compatibility
+  def activity_type_key(activity)
+    if activity.activity_type.present?
+      activity.activity_type.key
+    else
+      activity.read_attribute(:activity_type)
+    end
+  end
+
   private
 
   def user_prefers_imperial?

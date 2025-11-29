@@ -47,9 +47,9 @@
           <h1 class="text-xl font-bold text-white mb-2">
             <%= @activity.title.presence || "Untitled Activity" %>
           </h1>
-          <% if @activity.activity_type.present? %>
+          <% if activity_type_display_name(@activity).present? %>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white border border-white/20">
-              <%= @activity.activity_type %>
+              <%= activity_type_display_name(@activity) %>
             </span>
           <% end %>
         </div>
@@ -69,9 +69,9 @@
         <h1 class="text-4xl font-extrabold text-rich-cerulean-400 sm:text-5xl mb-4">
           <%= @activity.title.presence || "Untitled Activity" %>
         </h1>
-        <% if @activity.activity_type.present? %>
+        <% if activity_type_display_name(@activity).present? %>
           <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-shadow-grey-800 text-cobalt-blue-300 border border-shadow-grey-700 shadow-sm">
-            <%= @activity.activity_type %>
+            <%= activity_type_display_name(@activity) %>
           </span>
         <% end %>
       </div>

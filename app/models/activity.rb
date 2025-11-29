@@ -42,7 +42,10 @@ class Activity < ApplicationRecord
         # 3. trackpoint count
 
         # Check activity_type
-        next unless existing_activity.activity_type == activity_type
+        # Compare by activity_type_id if available, otherwise fall back to string comparison
+        existing_type_key = existing_activity.activity_type_id ? existing_activity.activity_type&.key : existing_activity.read_attribute(:activity_type)
+        activity_type_key = activity_type.is_a?(ActivityType) ? activity_type.key : activity_type
+        next unless existing_type_key == activity_type_key
 
         # Check end_time
         # If both have end_time, they must match

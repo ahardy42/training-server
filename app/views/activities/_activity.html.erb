@@ -13,7 +13,7 @@
             <div class="flex-shrink-0">
               <div class="h-12 w-12 rounded-xl bg-cobalt-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <span class="text-white font-bold text-lg">
-                  <%= activity.activity_type&.first&.upcase || "A" %>
+                  <%= activity_type_key(activity)&.first&.upcase || "A" %>
                 </span>
               </div>
             </div>
@@ -21,9 +21,9 @@
               <h3 class="text-lg font-semibold text-rich-cerulean-400 group-hover:text-rich-cerulean-300 transition-colors duration-200 truncate">
                 <%= activity.title.presence || "Untitled Activity" %>
               </h3>
-              <% if activity.activity_type.present? %>
+              <% if activity_type_display_name(activity).present? %>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cobalt-blue-500/20 text-cobalt-blue-300 border border-cobalt-blue-500/30 mt-1">
-                  <%= activity.activity_type %>
+                  <%= activity_type_display_name(activity) %>
                 </span>
               <% end %>
             </div>

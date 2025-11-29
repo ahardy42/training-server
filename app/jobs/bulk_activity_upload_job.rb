@@ -123,8 +123,12 @@ class BulkActivityUploadJob < ApplicationJob
 
             # Create activity
             ActiveRecord::Base.transaction do
+              # Find or create ActivityType
+              activity_type_obj = ActivityType.find_or_create_by_key(parsed_data[:activity_type])
+              
               activity = user.activities.create!(
-                activity_type: parsed_data[:activity_type],
+                activity_type_id: activity_type_obj&.id,
+                activity_type: parsed_data[:activity_type], # Keep string for backward compatibility
                 title: parsed_data[:title],
                 date: parsed_data[:date],
                 description: parsed_data[:description],
@@ -146,6 +150,7 @@ class BulkActivityUploadJob < ApplicationJob
                 trackpoints_to_create = parsed_data[:trackpoints].map do |tp_data|
                   {
                     track_id: track.id,
+                    activity_type_id: activity_type_obj&.id,
                     timestamp: tp_data[:timestamp],
                     latitude: tp_data[:latitude],
                     longitude: tp_data[:longitude],
