@@ -350,6 +350,147 @@ If you see an error about PostGIS not being available:
 - Clear the asset cache: `bin/rails tmp:clear`
 - Rebuild assets: `bin/rails assets:precompile` (production) or restart `bin/dev`
 
+## Production Deployment (Raspberry Pi)
+
+### SSH into the Pi
+
+```bash
+ssh pi@raspberrypi.local
+```
+
+### Check Running Containers
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+
+### View Logs
+
+```bash
+# Follow live logs
+docker compose -f docker-compose.prod.yml logs -f
+
+# Web container only
+docker logs training_server_web_prod
+
+# Last 100 lines
+docker logs --tail 100 training_server_web_prod
+
+# Save logs to file
+docker logs training_server_web_prod > web.log 2>&1
+```
+
+### Stop the Server
+
+```bash
+docker compose -f docker-compose.prod.yml down
+```
+
+### Deploy Updates
+
+```bash
+# On the Pi after pushing changes locally
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+### Cloudflare Tunnel
+
+#### Create a Tunnel
+
+```bash
+# Install cloudflared on the Pi
+curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
+sudo dpkg -i cloudflared.deb
+
+# Authenticate with Cloudflare
+cloudflared tunnel login
+
+# Create the tunnel
+cloudflared tunnel create training-server
+
+# Configure the tunnel — create ~/.cloudflared/config.yml
+tunnel: <TUNNEL_ID>
+credentials-file: /home/pi/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: yourdomain.com
+    service: http://localhost:80
+  - service: http_status:404
+
+# Route DNS to the tunnel
+cloudflared tunnel route dns training-server yourdomain.com
+
+# Run the tunnel
+cloudflared tunnel run training-server
+```
+
+#### Run as a systemd Service (auto-start on reboot)
+
+```bash
+sudo cloudflared service install
+sudo systemctl enable cloudflared
+sudo systemctl start cloudflared
+```
+
+#### Monitor the Tunnel
+
+```bash
+# Check tunnel status
+sudo systemctl status cloudflared
+
+# View tunnel logs
+sudo journalctl -u cloudflared -f
+
+# List all tunnels
+cloudflared tunnel list
+
+# Check tunnel info
+cloudflared tunnel info training-server
+```
+
+#### WAF Rules (Security)
+
+In the Cloudflare dashboard under **Security → WAF → Custom Rules**, add:
+
+**Block Path Traversal & Credential Theft:**
+```
+(http.request.uri contains "/../") or
+(http.request.uri contains "/.aws/") or
+(http.request.uri contains "/.env") or
+(http.request.uri contains "/wp-") or
+(http.request.uri contains "xmlrpc.php") or
+(http.request.uri.query contains "../") or
+(http.request.uri.query contains ".aws/credentials") or
+(http.request.full_uri contains "%2e%2e%2f")
+```
+Action: **Block**
+
+**Block Known Malicious User Agents:**
+```
+(http.user_agent contains "python-httpx") or
+(http.user_agent contains "SecurityScanner")
+```
+Action: **Block**
+
+**Rate Limit Login Endpoint** (under Security → WAF → Rate Limiting Rules):
+- Path: `/users/sign_in`, Method: `POST`
+- Threshold: 5 requests / 60 seconds per IP
+- Action: Block for 10 minutes
+
+### Copy Logs to Local Machine
+
+```bash
+# Save logs on Pi first
+ssh pi@raspberrypi.local "docker logs training_server_web_prod > ~/web.log 2>&1"
+
+# SCP to local
+scp pi@raspberrypi.local:~/web.log .
+
+# Or pipe directly without a temp file
+ssh pi@raspberrypi.local "docker logs training_server_web_prod 2>&1" > web.log
+```
+
 ## Contributing
 
 1. Fork the repository
