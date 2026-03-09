@@ -51,6 +51,7 @@ services:
       - "80:80"
     volumes:
       - storage_data:/rails/storage
+      - tmp_data:/rails/tmp
     depends_on:
       db:
         condition: service_healthy
@@ -77,6 +78,7 @@ services:
       REDIS_URL: redis://redis:6379/0
     volumes:
       - storage_data:/rails/storage
+      - tmp_data:/rails/tmp
     depends_on:
       db:
         condition: service_healthy
@@ -89,6 +91,7 @@ services:
 volumes:
   postgres_data_prod:
   storage_data:
+  tmp_data:
 
 networks:
   training_server_network:
