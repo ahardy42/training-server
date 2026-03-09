@@ -31,7 +31,7 @@ services:
     container_name: training_server_web_prod
     environment:
       RAILS_ENV: production
-      DATABASE_URL: postgresql://training_server:${TRAINING_SERVER_DATABASE_PASSWORD}@db:5432/training_server_production
+      DATABASE_URL: postgis://training_server:${TRAINING_SERVER_DATABASE_PASSWORD}@db:5432/training_server_production
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
       TRAINING_SERVER_DATABASE_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
       POSTGRES_HOST: db
