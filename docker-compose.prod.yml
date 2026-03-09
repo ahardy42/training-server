@@ -21,6 +21,14 @@ services:
       - training_server_network
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    platform: linux/arm64
+    container_name: training_server_redis_prod
+    networks:
+      - training_server_network
+    restart: unless-stopped
+
   web:
     build:
       context: .
@@ -37,6 +45,7 @@ services:
       POSTGRES_HOST: db
       POSTGRES_USER: training_server
       POSTGRES_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
+      REDIS_URL: redis://redis:6379/0
       PORT: 3000
     ports:
       - "80:80"
@@ -45,6 +54,34 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - training_server_network
+    restart: unless-stopped
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUBY_VERSION: 3.2.2
+    platform: linux/arm64
+    container_name: training_server_sidekiq_prod
+    command: bundle exec sidekiq
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgis://training_server:${TRAINING_SERVER_DATABASE_PASSWORD}@db:5432/training_server_production
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      TRAINING_SERVER_DATABASE_PASSWORD: ${TRAINING_SERVER_DATABASE_PASSWORD}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - storage_data:/rails/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - training_server_network
     restart: unless-stopped
